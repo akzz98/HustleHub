@@ -8,6 +8,10 @@ function findByEmail(email) {
   return userRepository.findByEmail(email);
 }
 
+function findById(id) {
+  return userRepository.findById(id);
+}
+
 function hashPassword(plainPassword) {
   return bcrypt.hashSync(plainPassword, SALT_ROUNDS);
 }
@@ -39,6 +43,7 @@ function toPublicUser(user) {
 
 module.exports = {
   findByEmail,
+  findById,
   hashPassword,
   comparePassword,
   createUser,

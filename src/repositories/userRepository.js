@@ -38,10 +38,16 @@ function create(user) {
   return user;
 }
 
+function findById(id) {
+  const users = findAll();
+  return users.find((user) => user.id === id) || null; // match on user.id
+}
+
 module.exports = {
   USERS_FILE_PATH,
   findAll,
   saveAll,
   findByEmail,
+  findById,
   create,
 };
