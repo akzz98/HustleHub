@@ -31,9 +31,17 @@ function findByEmail(email) {
   }) || null;
 }
 
+function create(user) {
+  const users = findAll();
+  users.push(user);
+  saveAll(users);
+  return user;
+}
+
 module.exports = {
   USERS_FILE_PATH,
   findAll,
   saveAll,
   findByEmail,
+  create,
 };
