@@ -19,6 +19,11 @@ function register(req, res) {
   res.status(201).json(userService.toPublicUser(user));
 }
 
+function login(req, res) {
+  res.status(200).json({ message: 'Login route is working.' });
+}
+
 module.exports = {
   register,
+  login,
 };
