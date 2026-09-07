@@ -72,7 +72,7 @@ describe('POST /api/auth/register', () => {
     const stored = JSON.parse(fs.readFileSync(USERS_FILE_PATH, 'utf8'))[0];
 
     expect(stored.password).toBeUndefined();
-    expect(stored.passwordHash).toMatch(/^\$2[aby]?\$/);
+    expect(stored.passwordHash).toMatch(/^\$2[aby]?\$/); // bcrypt hash prefix
     expect(JSON.stringify(stored)).not.toContain(validUser.password);
     expect(bcrypt.compareSync(validUser.password, stored.passwordHash)).toBe(true);
   });
