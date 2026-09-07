@@ -28,9 +28,15 @@ function toLoginResponse(token) {
   return { token };
 }
 
+function verifyAccessToken(token) {
+  // Checks signature and expiry. Throws if either fails.
+  return jwt.verify(token, getJwtSecret());
+}
+
 module.exports = {
   getJwtSecret,
   getJwtExpiresIn,
   createAccessToken,
   toLoginResponse,
+  verifyAccessToken,
 };
