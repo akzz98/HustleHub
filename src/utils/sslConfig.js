@@ -1,3 +1,5 @@
+const fs = require('fs');
+
 function getSslKeyPath() {
   const value = process.env.SSL_KEY_PATH;
 
@@ -19,7 +21,29 @@ function getSslCertPath() {
   return value;
 }
 
+function readSslFile(filePath, missingMessage) {
+  try {
+    return fs.readFileSync(filePath);
+  } catch (err) {
+    throw new Error(missingMessage);
+  }
+}
+
+function readSslMaterials() {
+  const key = readSslFile(
+    getSslKeyPath(),
+    'SSL key file is missing. Create it using the Local SSL certificate section in README.md.'
+  );
+  const cert = readSslFile(
+    getSslCertPath(),
+    'SSL certificate file is missing. Create it using the Local SSL certificate section in README.md.'
+  );
+
+  return { key, cert };
+}
+
 module.exports = {
   getSslKeyPath,
   getSslCertPath,
+  readSslMaterials,
 };

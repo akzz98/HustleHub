@@ -51,6 +51,26 @@ git status
 
 You should see `localhost-key.pem` and `localhost.pem`. `git status` must not list them (Git, 2026).
 
+## Starting the HTTPS server
+
+`server.js` uses `https.createServer` with the key and cert from those paths (Node.js, 2026). Set `PORT`, `JWT_SECRET`, `SSL_KEY_PATH`, and `SSL_CERT_PATH` in `.env`, then:
+
+```powershell
+npm start
+```
+
+The log should show `https://localhost:3000`. Automated tests import `app.js` and do not start TLS (Node.js, 2026).
+
+If the `.pem` files are missing, the process exits with a clear server-side message. It does not start an HTTP fallback.
+
+Self-signed trust: use `curl -k` (OpenSSL, 2026):
+
+```powershell
+curl.exe -k https://localhost:3000/
+```
+
+Expected: `{"status":"ok"}`.
+
 ## References
 
 Git (2026) *gitignore*. Available at: https://git-scm.com/docs/gitignore (Accessed: 7 September 2026).
