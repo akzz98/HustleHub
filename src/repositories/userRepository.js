@@ -21,8 +21,19 @@ function saveAll(users) {
   fs.writeFileSync(USERS_FILE_PATH, json, 'utf8');
 }
 
+function findByEmail(email) {
+  // Match on lowercased email so John@x.com and john@x.com are the same account.
+  const normalised = email.trim().toLowerCase();
+  const users = findAll();
+
+  return users.find((user) => {
+    return typeof user.email === 'string' && user.email.toLowerCase() === normalised;
+  }) || null;
+}
+
 module.exports = {
   USERS_FILE_PATH,
   findAll,
   saveAll,
+  findByEmail,
 };
