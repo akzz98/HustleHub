@@ -14,9 +14,9 @@ function register(req, res) {
     return res.status(409).json({ error: 'An account with this email already exists.' });
   }
 
-  userService.createUser(req.body.name, req.body.email, req.body.password);
+  const user = userService.createUser(req.body.name, req.body.email, req.body.password);
 
-  res.status(201).json({ message: 'Registration route is working.' });
+  res.status(201).json(userService.toPublicUser(user));
 }
 
 module.exports = {

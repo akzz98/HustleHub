@@ -23,8 +23,18 @@ function createUser(name, email, password) {
   return userRepository.create(user);
 }
 
+function toPublicUser(user) {
+  // id, name, email only
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+  };
+}
+
 module.exports = {
   findByEmail,
   hashPassword,
   createUser,
+  toPublicUser,
 };
