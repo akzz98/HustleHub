@@ -1,0 +1,21 @@
+{
+  "name": "hustlehub",
+  "version": "1.0.0",
+  "description": "HustleHub+ secure freelance marketplace backend",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akzz98/HustleHub.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/akzz98/HustleHub/issues"
+  },
+  "homepage": "https://github.com/akzz98/HustleHub#readme"
+}

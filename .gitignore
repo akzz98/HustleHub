@@ -1,0 +1,17 @@
+# Local working tracker — not an assessment deliverable
+CHECKLIST.md
+
+# Dependencies
+node_modules/
+
+# Environment secrets
+.env
+
+# Local SSL material
+certs/
+*.pem
+*.key
+*.crt
+
+# Generated user data
+data/users.json
