@@ -13,6 +13,7 @@ function hashPassword(plainPassword) {
 }
 
 function comparePassword(plainPassword, passwordHash) {
+  // true if the plaintext matches the stored hash
   return bcrypt.compareSync(plainPassword, passwordHash);
 }
 

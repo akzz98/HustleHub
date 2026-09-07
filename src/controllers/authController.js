@@ -29,6 +29,7 @@ function login(req, res) {
   const user = userService.findByEmail(req.body.email);
 
   if (!user) {
+    // same message as a wrong password — don't leak whether the email exists
     return res.status(401).json({ error: 'Invalid email or password.' });
   }
 
