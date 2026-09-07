@@ -12,6 +12,10 @@ function hashPassword(plainPassword) {
   return bcrypt.hashSync(plainPassword, SALT_ROUNDS);
 }
 
+function comparePassword(plainPassword, passwordHash) {
+  return bcrypt.compareSync(plainPassword, passwordHash);
+}
+
 function createUser(name, email, password) {
   const user = {
     id: crypto.randomUUID(),
@@ -35,6 +39,7 @@ function toPublicUser(user) {
 module.exports = {
   findByEmail,
   hashPassword,
+  comparePassword,
   createUser,
   toPublicUser,
 };

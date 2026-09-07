@@ -26,6 +26,18 @@ function login(req, res) {
     return res.status(400).json({ error });
   }
 
+  const user = userService.findByEmail(req.body.email);
+
+  if (!user) {
+    return res.status(401).json({ error: 'Invalid email or password.' });
+  }
+
+  const passwordMatches = userService.comparePassword(req.body.password, user.passwordHash);
+
+  if (!passwordMatches) {
+    return res.status(401).json({ error: 'Invalid email or password.' });
+  }
+
   res.status(200).json({ message: 'Login route is working.' });
 }
 
