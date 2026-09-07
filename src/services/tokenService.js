@@ -23,8 +23,14 @@ function createAccessToken(userId) {
   );
 }
 
+function toLoginResponse(token) {
+  // token only — no user fields, password, or hash
+  return { token };
+}
+
 module.exports = {
   getJwtSecret,
   getJwtExpiresIn,
   createAccessToken,
+  toLoginResponse,
 };

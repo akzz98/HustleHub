@@ -42,7 +42,7 @@ function login(req, res) {
 
   const token = tokenService.createAccessToken(user.id);
 
-  res.status(200).json({ token });
+  res.status(200).json(tokenService.toLoginResponse(token));
 }
 
 module.exports = {
