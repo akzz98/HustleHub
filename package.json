@@ -17,5 +17,8 @@
   "bugs": {
     "url": "https://github.com/akzz98/HustleHub/issues"
   },
-  "homepage": "https://github.com/akzz98/HustleHub#readme"
+  "homepage": "https://github.com/akzz98/HustleHub#readme",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
 }
