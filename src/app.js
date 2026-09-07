@@ -3,11 +3,10 @@ const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 
-// Registration send JSON, so parse it before the routes run.
-app.use(express.json());
+app.use(express.json()); // parse JSON request bodies
 
 app.get('/', (req, res) => {
-  res.status(200).json({ status: 'ok' });
+  res.status(200).json({ status: 'ok' }); // health check
 });
 
 app.use('/api/auth', authRoutes);
