@@ -1,5 +1,6 @@
 const { validateRegistration, validateLogin } = require('../utils/validation');
 const userService = require('../services/userService');
+const tokenService = require('../services/tokenService');
 
 function register(req, res) {
   const error = validateRegistration(req.body);
@@ -39,7 +40,9 @@ function login(req, res) {
     return res.status(401).json({ error: 'Invalid email or password.' });
   }
 
-  res.status(200).json({ message: 'Login route is working.' });
+  const token = tokenService.createAccessToken(user.id);
+
+  res.status(200).json({ token });
 }
 
 module.exports = {
