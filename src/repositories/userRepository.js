@@ -4,15 +4,8 @@ const path = require('path');
 // Keep the path in one place so we don't hard-code it in every function.
 const USERS_FILE_PATH = path.join(__dirname, '..', '..', 'data', 'users.json');
 
-function ensureUsersFile() {
-  // Fresh clone / first run won't have users.json, and we don't commit that file.
-  if (!fs.existsSync(USERS_FILE_PATH)) {
-    saveAll([]);
-  }
-}
-
 function findAll() {
-  ensureUsersFile();
+  // Throws if the file isn't there yet.
   const fileContents = fs.readFileSync(USERS_FILE_PATH, 'utf8');
   return JSON.parse(fileContents);
 }
