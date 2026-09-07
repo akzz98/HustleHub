@@ -1,4 +1,4 @@
-const { validateRegistration } = require('../utils/validation');
+const { validateRegistration, validateLogin } = require('../utils/validation');
 const userService = require('../services/userService');
 
 function register(req, res) {
@@ -20,6 +20,12 @@ function register(req, res) {
 }
 
 function login(req, res) {
+  const error = validateLogin(req.body);
+
+  if (error) {
+    return res.status(400).json({ error });
+  }
+
   res.status(200).json({ message: 'Login route is working.' });
 }
 

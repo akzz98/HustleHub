@@ -57,6 +57,33 @@ function validateRegistration(body) {
   return null;
 }
 
+function validateLogin(body) {
+  if (!isPlainObject(body)) {
+    return 'Invalid request body.';
+  }
+
+  const { email, password } = body;
+
+  if (email === undefined || password === undefined) {
+    return 'Email and password are required.';
+  }
+
+  if (typeof email !== 'string' || typeof password !== 'string') {
+    return 'Email and password must be strings.';
+  }
+
+  if (!isNonEmptyString(email) || !isNonEmptyString(password)) {
+    return 'Email and password are required.';
+  }
+
+  if (!isValidEmail(email.trim())) {
+    return 'Invalid email address.';
+  }
+
+  return null;
+}
+
 module.exports = {
   validateRegistration,
+  validateLogin,
 };
