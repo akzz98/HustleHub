@@ -283,6 +283,8 @@ curl.exe -k https://localhost:3000/api/profile -H "Authorization: Bearer PASTE_T
 
 Responses never include `password` or `passwordHash`.
 
+A Postman collection is in `postman/HustleHub.postman_collection.json`. In Postman: Import → that file. Turn off **SSL certificate verification** (Settings) for the local self-signed cert (OpenSSL, 2026). Set `baseUrl` if your `PORT` is not 3000. Send **Register**, then **Login** (saves `token`), then **GET /api/profile**.
+
 ## Testing
 
 Jest runs these tests in a Node environment, not a browser (Jest, 2026). SuperTest sends requests to the exported Express `app` and binds an ephemeral HTTP port if needed; it does not load `server.js` or call `https.createServer` (SuperTest, n.d.; Node.js, 2026). That is why `npm test` proves registration, login, JWT, and error bodies, but not TLS.
