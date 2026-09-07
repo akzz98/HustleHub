@@ -58,6 +58,15 @@ describe('POST /api/auth/register', () => {
     expect(response.body.error).toMatch(/Password must be/);
   });
 
+  test('name longer than 100 characters is rejected', async () => {
+    const response = await request(app)
+      .post('/api/auth/register')
+      .send({ ...validUser, name: 'A'.repeat(101) });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe('Name must be at most 100 characters.');
+  });
+
   test('duplicate email is rejected', async () => {
     await request(app).post('/api/auth/register').send(validUser);
     const response = await request(app).post('/api/auth/register').send(validUser);

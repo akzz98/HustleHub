@@ -19,7 +19,7 @@ function createAccessToken(userId) {
   return jwt.sign(
     { sub: userId }, // user id only — no email, password, or hash
     getJwtSecret(),
-    { expiresIn: getJwtExpiresIn() }
+    { expiresIn: getJwtExpiresIn(), algorithm: 'HS256' } // HMAC-SHA256 only
   );
 }
 
@@ -29,8 +29,8 @@ function toLoginResponse(token) {
 }
 
 function verifyAccessToken(token) {
-  // Checks signature and expiry. Throws if either fails.
-  return jwt.verify(token, getJwtSecret());
+  // Signature, expiry, and algorithm — HS256 only, not "none" or another alg
+  return jwt.verify(token, getJwtSecret(), { algorithms: ['HS256'] });
 }
 
 module.exports = {

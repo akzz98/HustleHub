@@ -46,6 +46,10 @@ function validateRegistration(body) {
     return 'Name, email and password are required.';
   }
 
+  if (name.trim().length > 100) {
+    return 'Name must be at most 100 characters.'; // stored name cap
+  }
+
   if (!isValidEmail(email.trim())) {
     return 'Invalid email address.';
   }
@@ -78,6 +82,10 @@ function validateLogin(body) {
 
   if (!isValidEmail(email.trim())) {
     return 'Invalid email address.';
+  }
+
+  if (password.length > 128) {
+    return 'Password must be at most 128 characters.'; // do not pass huge strings to bcrypt
   }
 
   return null;

@@ -47,7 +47,7 @@ describe('POST /api/auth/login', () => {
       .post('/api/auth/login')
       .send({ email: validUser.email, password: validUser.password });
 
-    const payload = jwt.verify(response.body.token, process.env.JWT_SECRET);
+    const payload = jwt.verify(response.body.token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
 
     expect(payload.sub).toBe(registered.id);
     expect(payload.password).toBeUndefined();
@@ -89,5 +89,14 @@ describe('POST /api/auth/login', () => {
 
     expect(response.status).toBe(401);
     expect(response.body.error).toBe('Invalid email or password.');
+  });
+
+  test('password longer than 128 characters is rejected', async () => {
+    const response = await request(app)
+      .post('/api/auth/login')
+      .send({ email: validUser.email, password: `${'A'.repeat(129)}!` });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe('Password must be at most 128 characters.');
   });
 });

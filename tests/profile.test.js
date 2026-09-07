@@ -76,11 +76,26 @@ describe('GET /api/profile', () => {
 
   test('expired token is rejected', async () => {
     const { user } = await registerAndLogin();
-    const expiredToken = jwt.sign({ sub: user.id }, process.env.JWT_SECRET, { expiresIn: '-1s' }); // already expired
+    const expiredToken = jwt.sign({ sub: user.id }, process.env.JWT_SECRET, {
+      expiresIn: '-1s',
+      algorithm: 'HS256',
+    }); // already expired
 
     const response = await request(app)
       .get('/api/profile')
       .set('Authorization', `Bearer ${expiredToken}`);
+
+    expect(response.status).toBe(401);
+    expect(response.body.error).toBe('Invalid or expired token.');
+  });
+
+  test('token signed with a different algorithm is rejected', async () => {
+    const { user } = await registerAndLogin();
+    const otherAlgToken = jwt.sign({ sub: user.id }, process.env.JWT_SECRET, { algorithm: 'HS384' });
+
+    const response = await request(app)
+      .get('/api/profile')
+      .set('Authorization', `Bearer ${otherAlgToken}`);
 
     expect(response.status).toBe(401);
     expect(response.body.error).toBe('Invalid or expired token.');
