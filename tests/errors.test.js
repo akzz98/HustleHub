@@ -1,13 +1,6 @@
-const fs = require('fs');
 const request = require('supertest');
 const app = require('../src/app'); // Express app, not the HTTPS server
-const { USERS_FILE_PATH } = require('../src/repositories/userRepository');
-
-function removeUsersFile() {
-  if (fs.existsSync(USERS_FILE_PATH)) {
-    fs.unlinkSync(USERS_FILE_PATH); // wipe generated test data
-  }
-}
+const userService = require('../src/services/userService');
 
 function assertNoLeaks(body) {
   // Client JSON must not include stacks, file paths, or secrets
@@ -24,9 +17,6 @@ function assertNoLeaks(body) {
   expect(text).not.toMatch(/src[\\/]/);
   expect(text).not.toMatch(/[A-Za-z]:\\/); // Windows path such as C:\
 }
-
-beforeEach(removeUsersFile);
-afterEach(removeUsersFile);
 
 describe('error responses', () => {
   test('malformed JSON returns 400 and does not leak parser details', async () => {
@@ -50,8 +40,9 @@ describe('error responses', () => {
 
   test('unexpected errors return a generic 500 and log the real error', async () => {
     const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
-
-    fs.writeFileSync(USERS_FILE_PATH, '{'); // not valid JSON — findAll will throw
+    const findSpy = jest
+      .spyOn(userService, 'findByEmail')
+      .mockRejectedValue(new Error('simulated storage failure'));
 
     try {
       const response = await request(app).post('/api/auth/register').send({
@@ -65,6 +56,7 @@ describe('error responses', () => {
       expect(spy).toHaveBeenCalled();
       assertNoLeaks(response.body);
     } finally {
+      findSpy.mockRestore();
       spy.mockRestore();
     }
   });

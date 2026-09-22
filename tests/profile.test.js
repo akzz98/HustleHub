@@ -1,20 +1,13 @@
-const fs = require('fs');
 const jwt = require('jsonwebtoken');
 const request = require('supertest');
 const app = require('../src/app'); // Express app, not the HTTPS server
-const { USERS_FILE_PATH } = require('../src/repositories/userRepository');
+const { User } = require('../src/models/User');
 
 const validUser = {
   name: 'John Smith',
   email: 'john@example.com',
   password: 'SecurePassword123!',
 };
-
-function removeUsersFile() {
-  if (fs.existsSync(USERS_FILE_PATH)) {
-    fs.unlinkSync(USERS_FILE_PATH); // wipe generated test data
-  }
-}
 
 async function registerAndLogin() {
   const registered = await request(app).post('/api/auth/register').send(validUser);
@@ -24,9 +17,6 @@ async function registerAndLogin() {
 
   return { user: registered.body, token: login.body.token };
 }
-
-beforeEach(removeUsersFile);
-afterEach(removeUsersFile);
 
 describe('GET /api/profile', () => {
   test('valid token returns 200 and public fields only', async () => {
@@ -103,7 +93,7 @@ describe('GET /api/profile', () => {
 
   test('valid token for a missing user returns 404', async () => {
     const { token } = await registerAndLogin();
-    fs.writeFileSync(USERS_FILE_PATH, '[]'); // token still valid, store is empty
+    await User.deleteMany({}); // token still valid, store is empty
 
     const response = await request(app)
       .get('/api/profile')

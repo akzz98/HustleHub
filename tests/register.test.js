@@ -1,23 +1,13 @@
-const fs = require('fs');
 const request = require('supertest');
 const bcrypt = require('bcrypt');
 const app = require('../src/app'); // Express app, not the HTTPS server
-const { USERS_FILE_PATH } = require('../src/repositories/userRepository');
+const userRepository = require('../src/repositories/userRepository');
 
 const validUser = {
   name: 'John Smith',
   email: 'john@example.com',
   password: 'SecurePassword123!',
 };
-
-function removeUsersFile() {
-  if (fs.existsSync(USERS_FILE_PATH)) {
-    fs.unlinkSync(USERS_FILE_PATH); // wipe generated test data
-  }
-}
-
-beforeEach(removeUsersFile);
-afterEach(removeUsersFile);
 
 describe('POST /api/auth/register', () => {
   test('valid registration returns 201 and public fields only', async () => {
@@ -78,7 +68,7 @@ describe('POST /api/auth/register', () => {
   test('stored password is hashed and plaintext is not kept', async () => {
     await request(app).post('/api/auth/register').send(validUser);
 
-    const stored = JSON.parse(fs.readFileSync(USERS_FILE_PATH, 'utf8'))[0];
+    const stored = await userRepository.findByEmail(validUser.email);
 
     expect(stored.password).toBeUndefined();
     expect(stored.passwordHash).toMatch(/^\$2[aby]?\$/); // bcrypt hash prefix

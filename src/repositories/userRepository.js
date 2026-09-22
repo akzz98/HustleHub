@@ -1,52 +1,55 @@
-const fs = require('fs');
-const path = require('path');
+const mongoose = require('mongoose');
+const { User } = require('../models/User');
 
-const USERS_FILE_PATH = path.join(__dirname, '..', '..', 'data', 'users.json');
-
-function ensureUsersFile() {
-  // Create users.json with an empty list if the file is missing.
-  if (!fs.existsSync(USERS_FILE_PATH)) {
-    saveAll([]);
+function toUserRecord(doc) {
+  if (!doc) {
+    return null;
   }
+
+  // Public API uses id; MongoDB stores _id. Never return password as plaintext.
+  return {
+    id: doc._id.toString(),
+    name: doc.name,
+    email: doc.email,
+    passwordHash: doc.passwordHash,
+    role: doc.role,
+  };
 }
 
-function findAll() {
-  ensureUsersFile();
-  const fileContents = fs.readFileSync(USERS_FILE_PATH, 'utf8');
-  return JSON.parse(fileContents); // user list
+async function findAll() {
+  const docs = await User.find();
+  return docs.map(toUserRecord);
 }
 
-function saveAll(users) {
-  const json = JSON.stringify(users, null, 2); // indented JSON
-  fs.writeFileSync(USERS_FILE_PATH, json, 'utf8');
-}
-
-function findByEmail(email) {
+async function findByEmail(email) {
   // Match on lowercased email so John@x.com and john@x.com are the same account.
   const normalised = email.trim().toLowerCase();
-  const users = findAll();
-
-  return users.find((user) => {
-    return typeof user.email === 'string' && user.email.toLowerCase() === normalised;
-  }) || null;
+  const doc = await User.findOne({ email: normalised });
+  return toUserRecord(doc);
 }
 
-function create(user) {
-  const users = findAll();
-  users.push(user);
-  saveAll(users);
-  return user;
+async function findById(id) {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return null;
+  }
+
+  const doc = await User.findById(id);
+  return toUserRecord(doc);
 }
 
-function findById(id) {
-  const users = findAll();
-  return users.find((user) => user.id === id) || null; // match on user.id
+async function create(user) {
+  const doc = await User.create({
+    name: user.name,
+    email: user.email,
+    passwordHash: user.passwordHash,
+    role: user.role,
+  });
+
+  return toUserRecord(doc);
 }
 
 module.exports = {
-  USERS_FILE_PATH,
   findAll,
-  saveAll,
   findByEmail,
   findById,
   create,

@@ -1,4 +1,3 @@
-const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const userRepository = require('../repositories/userRepository');
 
@@ -22,18 +21,15 @@ function comparePassword(plainPassword, passwordHash) {
 }
 
 function createUser(name, email, password) {
-  const user = {
-    id: crypto.randomUUID(),
+  return userRepository.create({
     name: name.trim(),
     email: email.trim().toLowerCase(),
     passwordHash: hashPassword(password),
-  };
-
-  return userRepository.create(user);
+  });
 }
 
 function toPublicUser(user) {
-  // id, name, email only
+  // id, name, email only — role is not part of the Part 1 response shape
   return {
     id: user.id,
     name: user.name,

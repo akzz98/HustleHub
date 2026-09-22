@@ -1,8 +1,6 @@
-const fs = require('fs');
 const jwt = require('jsonwebtoken');
 const request = require('supertest');
 const app = require('../src/app'); // Express app, not the HTTPS server
-const { USERS_FILE_PATH } = require('../src/repositories/userRepository');
 
 const validUser = {
   name: 'John Smith',
@@ -10,19 +8,10 @@ const validUser = {
   password: 'SecurePassword123!',
 };
 
-function removeUsersFile() {
-  if (fs.existsSync(USERS_FILE_PATH)) {
-    fs.unlinkSync(USERS_FILE_PATH); // wipe generated test data
-  }
-}
-
 async function registerUser() {
   const response = await request(app).post('/api/auth/register').send(validUser);
   return response.body;
 }
-
-beforeEach(removeUsersFile);
-afterEach(removeUsersFile);
 
 describe('POST /api/auth/login', () => {
   test('valid credentials return 200 and a token only', async () => {

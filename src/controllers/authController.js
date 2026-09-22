@@ -2,7 +2,7 @@ const { validateRegistration, validateLogin } = require('../utils/validation');
 const userService = require('../services/userService');
 const tokenService = require('../services/tokenService');
 
-function register(req, res, next) {
+async function register(req, res, next) {
   try {
     const error = validateRegistration(req.body);
 
@@ -10,13 +10,13 @@ function register(req, res, next) {
       return res.status(400).json({ error });
     }
 
-    const existingUser = userService.findByEmail(req.body.email);
+    const existingUser = await userService.findByEmail(req.body.email);
 
     if (existingUser) {
       return res.status(409).json({ error: 'An account with this email already exists.' });
     }
 
-    const user = userService.createUser(req.body.name, req.body.email, req.body.password);
+    const user = await userService.createUser(req.body.name, req.body.email, req.body.password);
 
     res.status(201).json(userService.toPublicUser(user));
   } catch (err) {
@@ -24,7 +24,7 @@ function register(req, res, next) {
   }
 }
 
-function login(req, res, next) {
+async function login(req, res, next) {
   try {
     const error = validateLogin(req.body);
 
@@ -32,7 +32,7 @@ function login(req, res, next) {
       return res.status(400).json({ error });
     }
 
-    const user = userService.findByEmail(req.body.email);
+    const user = await userService.findByEmail(req.body.email);
 
     if (!user) {
       // same message as a wrong password — don't leak whether the email exists
