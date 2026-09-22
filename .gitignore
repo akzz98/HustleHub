@@ -15,3 +15,8 @@ certs/
 
 # Generated user data
 data/users.json
+
+# Postman app/extension local workspace (keep postman/HustleHub.postman_collection.json)
+.postman/
+postman/collections/
+postman/globals/
