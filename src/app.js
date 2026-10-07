@@ -5,10 +5,12 @@ const gigRoutes = require('./routes/gigRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const incomeRoutes = require('./routes/incomeRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const { createHelmetMiddleware } = require('./middleware/securityHeaders');
 const { errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
 
+app.use(createHelmetMiddleware()); // security headers + CSP before routes
 app.use(express.json()); // parse JSON request bodies
 
 app.get('/', (req, res) => {
