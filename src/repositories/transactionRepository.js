@@ -79,10 +79,16 @@ async function sumAmountByFreelancerId(freelancerId) {
   };
 }
 
+async function findAll() {
+  const docs = await Transaction.find().sort({ _id: -1 });
+  return docs.map(toTransactionRecord);
+}
+
 module.exports = {
   create,
   findByBookingId,
   findById,
   findByFreelancerId,
   sumAmountByFreelancerId,
+  findAll,
 };

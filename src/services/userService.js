@@ -48,12 +48,28 @@ function toPublicUser(user) {
   };
 }
 
+// Admin oversight only — still never includes passwordHash.
+function toAdminPublicUser(user) {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+  };
+}
+
+function listUsers() {
+  return userRepository.findAll();
+}
+
 module.exports = {
   findByEmail,
   findById,
+  listUsers,
   hashPassword,
   comparePassword,
   createUser,
   createAdminUser,
   toPublicUser,
+  toAdminPublicUser,
 };

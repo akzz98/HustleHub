@@ -68,9 +68,19 @@ async function listBookingsForUser(userId, role) {
   return [];
 }
 
+function listAllBookings() {
+  return bookingRepository.findAll();
+}
+
+function getBookingById(id) {
+  return bookingRepository.findById(id);
+}
+
 module.exports = {
   createBooking,
   listBookingsForUser,
+  listAllBookings,
+  getBookingById,
   toPublicBooking,
   simulateBookingConfirmation,
 };

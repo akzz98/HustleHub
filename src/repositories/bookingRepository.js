@@ -62,10 +62,16 @@ async function findByFreelancerId(freelancerId) {
   return docs.map(toBookingRecord);
 }
 
+async function findAll() {
+  const docs = await Booking.find().sort({ _id: -1 });
+  return docs.map(toBookingRecord);
+}
+
 module.exports = {
   create,
   findById,
   remove,
   findByClientId,
   findByFreelancerId,
+  findAll,
 };

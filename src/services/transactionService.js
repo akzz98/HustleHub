@@ -20,7 +20,17 @@ function createForBooking(booking, amount) {
   });
 }
 
+function listAllTransactions() {
+  return transactionRepository.findAll();
+}
+
+function getTransactionById(id) {
+  return transactionRepository.findById(id);
+}
+
 module.exports = {
   createForBooking,
+  listAllTransactions,
+  getTransactionById,
   toPublicTransaction,
 };
