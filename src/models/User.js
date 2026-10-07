@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 
 const ROLES = ['client', 'freelancer', 'admin'];
+// Public register must never accept admin — elevated accounts are seeded separately.
+const PUBLIC_REGISTRATION_ROLES = ['client', 'freelancer'];
 
 const userSchema = new mongoose.Schema(
   {
@@ -22,4 +24,5 @@ const User = mongoose.model('User', userSchema);
 module.exports = {
   User,
   ROLES,
+  PUBLIC_REGISTRATION_ROLES,
 };

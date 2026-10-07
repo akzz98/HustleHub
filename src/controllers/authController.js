@@ -16,8 +16,14 @@ async function register(req, res, next) {
       return res.status(409).json({ error: 'An account with this email already exists.' });
     }
 
-    const user = await userService.createUser(req.body.name, req.body.email, req.body.password);
+    const user = await userService.createUser(
+      req.body.name,
+      req.body.email,
+      req.body.password,
+      req.body.role
+    );
 
+    // Part 1 shape preserved: id, name, email only (role is stored, not returned here)
     res.status(201).json(userService.toPublicUser(user));
   } catch (err) {
     next(err); // unexpected failures → errorHandler (generic 500)

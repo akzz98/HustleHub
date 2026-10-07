@@ -6,6 +6,7 @@ const validUser = {
   name: 'John Smith',
   email: 'john@example.com',
   password: 'SecurePassword123!',
+  role: 'client',
 };
 
 async function registerUser() {

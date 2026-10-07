@@ -20,11 +20,12 @@ function comparePassword(plainPassword, passwordHash) {
   return bcrypt.compareSync(plainPassword, passwordHash);
 }
 
-function createUser(name, email, password) {
+function createUser(name, email, password, role) {
   return userRepository.create({
     name: name.trim(),
     email: email.trim().toLowerCase(),
     passwordHash: hashPassword(password),
+    role: role.trim(), // already validated as client or freelancer
   });
 }
 

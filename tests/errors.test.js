@@ -49,6 +49,7 @@ describe('error responses', () => {
         name: 'John Smith',
         email: 'john@example.com',
         password: 'SecurePassword123!',
+        role: 'client',
       });
 
       expect(response.status).toBe(500);

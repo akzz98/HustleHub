@@ -1,3 +1,5 @@
+const { PUBLIC_REGISTRATION_ROLES } = require('../models/User');
+
 function isPlainObject(value) {
   // Objects only — not arrays or null.
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -32,18 +34,33 @@ function validateRegistration(body) {
     return 'Invalid request body.';
   }
 
-  const { name, email, password } = body;
+  const { name, email, password, role } = body;
 
-  if (name === undefined || email === undefined || password === undefined) {
-    return 'Name, email and password are required.';
+  if (
+    name === undefined ||
+    email === undefined ||
+    password === undefined ||
+    role === undefined
+  ) {
+    return 'Name, email, password and role are required.';
   }
 
-  if (typeof name !== 'string' || typeof email !== 'string' || typeof password !== 'string') {
-    return 'Name, email and password must be strings.';
+  if (
+    typeof name !== 'string' ||
+    typeof email !== 'string' ||
+    typeof password !== 'string' ||
+    typeof role !== 'string'
+  ) {
+    return 'Name, email, password and role must be strings.';
   }
 
-  if (!isNonEmptyString(name) || !isNonEmptyString(email) || !isNonEmptyString(password)) {
-    return 'Name, email and password are required.';
+  if (
+    !isNonEmptyString(name) ||
+    !isNonEmptyString(email) ||
+    !isNonEmptyString(password) ||
+    !isNonEmptyString(role)
+  ) {
+    return 'Name, email, password and role are required.';
   }
 
   if (name.trim().length > 100) {
@@ -56,6 +73,11 @@ function validateRegistration(body) {
 
   if (!isValidPassword(password)) {
     return 'Password must be 8-128 characters and include uppercase, lowercase, a number and a special character.';
+  }
+
+  // Reject admin and any other value — public self-registration cannot elevate privileges.
+  if (!PUBLIC_REGISTRATION_ROLES.includes(role.trim())) {
+    return 'Role must be client or freelancer.';
   }
 
   return null;

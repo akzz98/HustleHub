@@ -7,6 +7,7 @@ const validUser = {
   name: 'John Smith',
   email: 'john@example.com',
   password: 'SecurePassword123!',
+  role: 'client',
 };
 
 describe('POST /api/auth/register', () => {
@@ -74,5 +75,52 @@ describe('POST /api/auth/register', () => {
     expect(stored.passwordHash).toMatch(/^\$2[aby]?\$/); // bcrypt hash prefix
     expect(JSON.stringify(stored)).not.toContain(validUser.password);
     expect(bcrypt.compareSync(validUser.password, stored.passwordHash)).toBe(true);
+    expect(stored.role).toBe('client');
+  });
+
+  test('freelancer role is accepted and stored', async () => {
+    const response = await request(app)
+      .post('/api/auth/register')
+      .send({ ...validUser, role: 'freelancer' });
+
+    expect(response.status).toBe(201);
+    expect(response.body).toEqual({
+      id: expect.any(String),
+      name: 'John Smith',
+      email: 'john@example.com',
+    });
+    expect(response.body.role).toBeUndefined();
+
+    const stored = await userRepository.findByEmail(validUser.email);
+    expect(stored.role).toBe('freelancer');
+  });
+
+  test('missing role is rejected', async () => {
+    const { role, ...withoutRole } = validUser;
+    const response = await request(app).post('/api/auth/register').send(withoutRole);
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe('Name, email, password and role are required.');
+  });
+
+  test('admin role cannot be self-registered', async () => {
+    const response = await request(app)
+      .post('/api/auth/register')
+      .send({ ...validUser, role: 'admin' });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe('Role must be client or freelancer.');
+
+    const stored = await userRepository.findByEmail(validUser.email);
+    expect(stored).toBeNull();
+  });
+
+  test('unknown role is rejected', async () => {
+    const response = await request(app)
+      .post('/api/auth/register')
+      .send({ ...validUser, role: 'manager' });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe('Role must be client or freelancer.');
   });
 });
