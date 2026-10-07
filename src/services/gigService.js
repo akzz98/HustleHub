@@ -4,6 +4,10 @@ function listGigs() {
   return gigRepository.findAll();
 }
 
+function getGigById(id) {
+  return gigRepository.findById(id);
+}
+
 function createGig(title, description, price, freelancerId) {
   // freelancerId always comes from the verified JWT — never from the request body.
   return gigRepository.create({
@@ -27,6 +31,7 @@ function toPublicGig(gig) {
 
 module.exports = {
   listGigs,
+  getGigById,
   createGig,
   toPublicGig,
 };

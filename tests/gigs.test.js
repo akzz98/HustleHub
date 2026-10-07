@@ -177,3 +177,39 @@ describe('POST /api/gigs', () => {
     expect(response.body.error).toBe('Title, description and price are required.');
   });
 });
+
+describe('GET /api/gigs/:id', () => {
+  test('returns a single gig without authentication', async () => {
+    const { user, token } = await registerAndLogin(freelancerUser);
+
+    const created = await request(app)
+      .post('/api/gigs')
+      .set('Authorization', `Bearer ${token}`)
+      .send(validGig);
+
+    const response = await request(app).get(`/api/gigs/${created.body.id}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      id: created.body.id,
+      title: 'Logo design',
+      description: 'Simple logo package',
+      price: 150,
+      freelancerId: user.id,
+    });
+  });
+
+  test('unknown id returns 404', async () => {
+    const response = await request(app).get('/api/gigs/64b64c4f2f1c2e0012345678');
+
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({ error: 'Gig not found.' });
+  });
+
+  test('invalid id format returns 404', async () => {
+    const response = await request(app).get('/api/gigs/not-a-valid-id');
+
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({ error: 'Gig not found.' });
+  });
+});

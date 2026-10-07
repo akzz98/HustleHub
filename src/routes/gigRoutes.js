@@ -6,6 +6,7 @@ const gigController = require('../controllers/gigController');
 const router = express.Router();
 
 router.get('/', gigController.listGigs); // GET /api/gigs — public browse
+router.get('/:id', gigController.getGig); // GET /api/gigs/:id — public view
 router.post(
   '/',
   authenticate,
