@@ -4,6 +4,16 @@ function listGigs() {
   return gigRepository.findAll();
 }
 
+function createGig(title, description, price, freelancerId) {
+  // freelancerId always comes from the verified JWT — never from the request body.
+  return gigRepository.create({
+    title: title.trim(),
+    description: description.trim(),
+    price,
+    freelancerId,
+  });
+}
+
 function toPublicGig(gig) {
   // Safe fields only — no internal Mongo metadata
   return {
@@ -17,5 +27,6 @@ function toPublicGig(gig) {
 
 module.exports = {
   listGigs,
+  createGig,
   toPublicGig,
 };

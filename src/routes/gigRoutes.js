@@ -1,8 +1,16 @@
 const express = require('express');
+const { authenticate } = require('../middleware/authenticate');
+const { requireRole } = require('../middleware/requireRole');
 const gigController = require('../controllers/gigController');
 
 const router = express.Router();
 
 router.get('/', gigController.listGigs); // GET /api/gigs — public browse
+router.post(
+  '/',
+  authenticate,
+  requireRole('freelancer'),
+  gigController.createGig
+); // POST /api/gigs — freelancer only
 
 module.exports = router;

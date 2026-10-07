@@ -133,8 +133,48 @@ function validateAdminSeedCredentials({ name, email, password }) {
   return null;
 }
 
+function validateGigCreate(body) {
+  if (!isPlainObject(body)) {
+    return 'Invalid request body.';
+  }
+
+  const { title, description, price } = body;
+
+  if (title === undefined || description === undefined || price === undefined) {
+    return 'Title, description and price are required.';
+  }
+
+  if (typeof title !== 'string' || typeof description !== 'string') {
+    return 'Title and description must be strings.';
+  }
+
+  if (!isNonEmptyString(title) || !isNonEmptyString(description)) {
+    return 'Title, description and price are required.';
+  }
+
+  if (title.trim().length > 120) {
+    return 'Title must be at most 120 characters.';
+  }
+
+  if (description.trim().length > 2000) {
+    return 'Description must be at most 2000 characters.';
+  }
+
+  // Number only — reject strings like "10" so types stay strict at the API boundary.
+  if (typeof price !== 'number' || Number.isNaN(price) || !Number.isFinite(price)) {
+    return 'Price must be a number.';
+  }
+
+  if (price < 0) {
+    return 'Price must be at least 0.';
+  }
+
+  return null;
+}
+
 module.exports = {
   validateRegistration,
   validateLogin,
   validateAdminSeedCredentials,
+  validateGigCreate,
 };
