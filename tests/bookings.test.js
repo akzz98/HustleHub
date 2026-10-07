@@ -277,3 +277,129 @@ describe('GET /api/bookings', () => {
     expect(response.body).toEqual({ error: 'Authentication required.' });
   });
 });
+
+describe('booking and transaction ownership regression', () => {
+  test('invalid token cannot list bookings', async () => {
+    const response = await request(app)
+      .get('/api/bookings')
+      .set('Authorization', 'Bearer not-a-real-token');
+
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({ error: 'Invalid or expired token.' });
+  });
+
+  test('invalid token cannot create a booking', async () => {
+    const { gig } = await createGigAsFreelancer();
+
+    const response = await request(app)
+      .post('/api/bookings')
+      .set('Authorization', 'Bearer not-a-real-token')
+      .send({ gigId: gig.id });
+
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({ error: 'Invalid or expired token.' });
+  });
+
+  test('invalid gig id format returns 404', async () => {
+    const client = await registerAndLogin(clientUser);
+
+    const response = await request(app)
+      .post('/api/bookings')
+      .set('Authorization', `Bearer ${client.token}`)
+      .send({ gigId: 'not-a-valid-id' });
+
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({ error: 'Gig not found.' });
+  });
+
+  test('each booking creates its own transaction with the correct amount', async () => {
+    const freelancer = await registerAndLogin(freelancerUser);
+    const client = await registerAndLogin(clientUser);
+    const transactionRepository = require('../src/repositories/transactionRepository');
+
+    const cheapGig = await request(app)
+      .post('/api/gigs')
+      .set('Authorization', `Bearer ${freelancer.token}`)
+      .send({
+        title: 'Quick fix',
+        description: 'Small task',
+        price: 40,
+      });
+
+    const priceyGig = await request(app)
+      .post('/api/gigs')
+      .set('Authorization', `Bearer ${freelancer.token}`)
+      .send({
+        title: 'Full project',
+        description: 'Large task',
+        price: 300,
+      });
+
+    const cheapBooking = await request(app)
+      .post('/api/bookings')
+      .set('Authorization', `Bearer ${client.token}`)
+      .send({ gigId: cheapGig.body.id });
+
+    const priceyBooking = await request(app)
+      .post('/api/bookings')
+      .set('Authorization', `Bearer ${client.token}`)
+      .send({ gigId: priceyGig.body.id });
+
+    expect(cheapBooking.status).toBe(201);
+    expect(priceyBooking.status).toBe(201);
+
+    const cheapTx = await transactionRepository.findByBookingId(cheapBooking.body.id);
+    const priceyTx = await transactionRepository.findByBookingId(priceyBooking.body.id);
+
+    expect(cheapTx.amount).toBe(40);
+    expect(priceyTx.amount).toBe(300);
+    expect(cheapTx.id).not.toBe(priceyTx.id);
+  });
+
+  test('freelancer list stays empty when only other freelancers have bookings', async () => {
+    const owner = await createGigAsFreelancer();
+    const otherFreelancer = await registerAndLogin({
+      ...freelancerUser,
+      name: 'Other Free',
+      email: 'lonely-free@example.com',
+    });
+    const client = await registerAndLogin(clientUser);
+
+    await request(app)
+      .post('/api/bookings')
+      .set('Authorization', `Bearer ${client.token}`)
+      .send({ gigId: owner.gig.id });
+
+    const response = await request(app)
+      .get('/api/bookings')
+      .set('Authorization', `Bearer ${otherFreelancer.token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual([]);
+  });
+
+  test('admin cannot use client booking routes', async () => {
+    const userService = require('../src/services/userService');
+    const tokenService = require('../src/services/tokenService');
+    const { gig } = await createGigAsFreelancer();
+
+    const admin = await userService.createAdminUser(
+      'Local Admin',
+      'admin-bookings@example.com',
+      'AdminPassword123!'
+    );
+    const token = tokenService.createAccessToken(admin.id, admin.role);
+
+    const createAttempt = await request(app)
+      .post('/api/bookings')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ gigId: gig.id });
+
+    const listAttempt = await request(app)
+      .get('/api/bookings')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(createAttempt.status).toBe(403);
+    expect(listAttempt.status).toBe(403);
+  });
+});
