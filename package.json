@@ -5,7 +5,8 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "test": "jest"
+    "test": "jest",
+    "seed:admin": "node src/scripts/seedAdmin.js"
   },
   "repository": {
     "type": "git",

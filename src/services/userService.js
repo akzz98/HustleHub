@@ -29,6 +29,16 @@ function createUser(name, email, password, role) {
   });
 }
 
+// Seed/bootstrap only — not exposed through public registration.
+function createAdminUser(name, email, password) {
+  return userRepository.create({
+    name: name.trim(),
+    email: email.trim().toLowerCase(),
+    passwordHash: hashPassword(password),
+    role: 'admin',
+  });
+}
+
 function toPublicUser(user) {
   // id, name, email only — role is not part of the Part 1 response shape
   return {
@@ -44,5 +54,6 @@ module.exports = {
   hashPassword,
   comparePassword,
   createUser,
+  createAdminUser,
   toPublicUser,
 };

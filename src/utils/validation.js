@@ -113,7 +113,28 @@ function validateLogin(body) {
   return null;
 }
 
+function validateAdminSeedCredentials({ name, email, password }) {
+  if (!isNonEmptyString(name) || !isNonEmptyString(email) || !isNonEmptyString(password)) {
+    return 'ADMIN_SEED_NAME, ADMIN_SEED_EMAIL and ADMIN_SEED_PASSWORD are required.';
+  }
+
+  if (name.trim().length > 100) {
+    return 'ADMIN_SEED_NAME must be at most 100 characters.';
+  }
+
+  if (!isValidEmail(email.trim())) {
+    return 'ADMIN_SEED_EMAIL must be a valid email address.';
+  }
+
+  if (!isValidPassword(password)) {
+    return 'ADMIN_SEED_PASSWORD must be 8-128 characters and include uppercase, lowercase, a number and a special character.';
+  }
+
+  return null;
+}
+
 module.exports = {
   validateRegistration,
   validateLogin,
+  validateAdminSeedCredentials,
 };
