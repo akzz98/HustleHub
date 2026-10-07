@@ -485,3 +485,95 @@ describe('gig input sanitisation', () => {
     expect(response.body.error).toBe('Input contains disallowed content.');
   });
 });
+
+describe('gig CRUD regression gaps', () => {
+  test('invalid token cannot create a gig', async () => {
+    const response = await request(app)
+      .post('/api/gigs')
+      .set('Authorization', 'Bearer not-a-real-token')
+      .send(validGig);
+
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({ error: 'Invalid or expired token.' });
+  });
+
+  test('negative price is rejected', async () => {
+    const { token } = await registerAndLogin(freelancerUser);
+
+    const response = await request(app)
+      .post('/api/gigs')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...validGig, price: -1 });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe('Price must be at least 0.');
+  });
+
+  test('title longer than 120 characters is rejected', async () => {
+    const { token } = await registerAndLogin(freelancerUser);
+
+    const response = await request(app)
+      .post('/api/gigs')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...validGig, title: 'A'.repeat(121) });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe('Title must be at most 120 characters.');
+  });
+
+  test('update strips HTML markup before storing', async () => {
+    const { token } = await registerAndLogin(freelancerUser);
+
+    const created = await request(app)
+      .post('/api/gigs')
+      .set('Authorization', `Bearer ${token}`)
+      .send(validGig);
+
+    const response = await request(app)
+      .put(`/api/gigs/${created.body.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        title: '<b>Updated</b> logo',
+        description: 'Still <em>plain</em> text',
+        price: 175,
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.title).toBe('Updated logo');
+    expect(response.body.description).toBe('Still plain text');
+  });
+
+  test('cross-user update leaves the original gig unchanged', async () => {
+    const owner = await registerAndLogin(freelancerUser);
+    const other = await registerAndLogin({
+      ...freelancerUser,
+      name: 'Other Free',
+      email: 'other-regression@example.com',
+    });
+
+    const created = await request(app)
+      .post('/api/gigs')
+      .set('Authorization', `Bearer ${owner.token}`)
+      .send(validGig);
+
+    await request(app)
+      .put(`/api/gigs/${created.body.id}`)
+      .set('Authorization', `Bearer ${other.token}`)
+      .send({
+        title: 'Hijacked title',
+        description: 'Should not persist',
+        price: 999,
+      });
+
+    const after = await request(app).get(`/api/gigs/${created.body.id}`);
+
+    expect(after.status).toBe(200);
+    expect(after.body).toEqual({
+      id: created.body.id,
+      title: 'Logo design',
+      description: 'Simple logo package',
+      price: 150,
+      freelancerId: owner.user.id,
+    });
+  });
+});
