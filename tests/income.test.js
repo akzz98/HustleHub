@@ -180,3 +180,126 @@ describe('GET /api/income/me', () => {
     expect(response.body).toEqual({ error: 'Authentication required.' });
   });
 });
+
+describe('income access control and calculation regression', () => {
+  test('invalid token is rejected', async () => {
+    const response = await request(app)
+      .get('/api/income/me')
+      .set('Authorization', 'Bearer not-a-real-token');
+
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({ error: 'Invalid or expired token.' });
+  });
+
+  test('accumulates income across multiple bookings via the endpoint', async () => {
+    const freelancer = await registerAndLogin(freelancerUser);
+    const client = await registerAndLogin(clientUser);
+
+    const gigA = await request(app)
+      .post('/api/gigs')
+      .set('Authorization', `Bearer ${freelancer.token}`)
+      .send({ title: 'A', description: 'One', price: 75 });
+
+    const gigB = await request(app)
+      .post('/api/gigs')
+      .set('Authorization', `Bearer ${freelancer.token}`)
+      .send({ title: 'B', description: 'Two', price: 25 });
+
+    await request(app)
+      .post('/api/bookings')
+      .set('Authorization', `Bearer ${client.token}`)
+      .send({ gigId: gigA.body.id });
+
+    await request(app)
+      .post('/api/bookings')
+      .set('Authorization', `Bearer ${client.token}`)
+      .send({ gigId: gigB.body.id });
+
+    const response = await request(app)
+      .get('/api/income/me')
+      .set('Authorization', `Bearer ${freelancer.token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      freelancerId: freelancer.user.id,
+      totalIncome: 100,
+      transactionCount: 2,
+    });
+  });
+
+  test('freelancer income endpoint never returns another freelancer total', async () => {
+    const freelancer = await registerAndLogin(freelancerUser);
+    const other = await registerAndLogin(otherFreelancerUser);
+    const client = await registerAndLogin(clientUser);
+
+    const otherGig = await request(app)
+      .post('/api/gigs')
+      .set('Authorization', `Bearer ${other.token}`)
+      .send({ title: 'Other', description: 'Theirs', price: 400 });
+
+    await request(app)
+      .post('/api/bookings')
+      .set('Authorization', `Bearer ${client.token}`)
+      .send({ gigId: otherGig.body.id });
+
+    const mine = await request(app)
+      .get('/api/income/me')
+      .set('Authorization', `Bearer ${freelancer.token}`);
+
+    const theirs = await request(app)
+      .get('/api/income/me')
+      .set('Authorization', `Bearer ${other.token}`);
+
+    expect(mine.status).toBe(200);
+    expect(mine.body.totalIncome).toBe(0);
+    expect(theirs.status).toBe(200);
+    expect(theirs.body).toEqual({
+      freelancerId: other.user.id,
+      totalIncome: 400,
+      transactionCount: 1,
+    });
+  });
+
+  test('admin cannot access freelancer income endpoint', async () => {
+    const userService = require('../src/services/userService');
+    const tokenService = require('../src/services/tokenService');
+
+    const admin = await userService.createAdminUser(
+      'Local Admin',
+      'admin-income@example.com',
+      'AdminPassword123!'
+    );
+    const token = tokenService.createAccessToken(admin.id, admin.role);
+
+    const response = await request(app)
+      .get('/api/income/me')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(403);
+    expect(response.body).toEqual({ error: 'Forbidden.' });
+  });
+
+  test('endpoint total matches booking transaction amounts for that freelancer', async () => {
+    const freelancer = await registerAndLogin(freelancerUser);
+    const client = await registerAndLogin(clientUser);
+
+    const gig = await request(app)
+      .post('/api/gigs')
+      .set('Authorization', `Bearer ${freelancer.token}`)
+      .send({ title: 'Match', description: 'Check totals', price: 88 });
+
+    const booking = await request(app)
+      .post('/api/bookings')
+      .set('Authorization', `Bearer ${client.token}`)
+      .send({ gigId: gig.body.id });
+
+    const income = await request(app)
+      .get('/api/income/me')
+      .set('Authorization', `Bearer ${freelancer.token}`);
+
+    expect(booking.status).toBe(201);
+    expect(income.status).toBe(200);
+    expect(income.body.totalIncome).toBe(booking.body.transaction.amount);
+    expect(income.body.transactionCount).toBe(1);
+  });
+});
