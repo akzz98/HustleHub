@@ -1,4 +1,4 @@
-const { validateGigCreate } = require('../utils/validation');
+const { prepareGigInput } = require('../utils/validation');
 const gigService = require('../services/gigService');
 
 async function listGigs(req, res, next) {
@@ -26,16 +26,16 @@ async function getGig(req, res, next) {
 
 async function createGig(req, res, next) {
   try {
-    const error = validateGigCreate(req.body);
+    const prepared = prepareGigInput(req.body);
 
-    if (error) {
-      return res.status(400).json({ error });
+    if (prepared.error) {
+      return res.status(400).json({ error: prepared.error });
     }
 
     const gig = await gigService.createGig(
-      req.body.title,
-      req.body.description,
-      req.body.price,
+      prepared.value.title,
+      prepared.value.description,
+      prepared.value.price,
       req.userId // ownership from JWT, ignore any client-supplied freelancerId
     );
 
@@ -47,10 +47,10 @@ async function createGig(req, res, next) {
 
 async function updateGig(req, res, next) {
   try {
-    const error = validateGigCreate(req.body);
+    const prepared = prepareGigInput(req.body);
 
-    if (error) {
-      return res.status(400).json({ error });
+    if (prepared.error) {
+      return res.status(400).json({ error: prepared.error });
     }
 
     const existing = await gigService.getGigById(req.params.id);
@@ -66,9 +66,9 @@ async function updateGig(req, res, next) {
 
     const gig = await gigService.updateGig(
       req.params.id,
-      req.body.title,
-      req.body.description,
-      req.body.price
+      prepared.value.title,
+      prepared.value.description,
+      prepared.value.price
     );
 
     res.status(200).json(gigService.toPublicGig(gig));

@@ -1,4 +1,5 @@
 const { PUBLIC_REGISTRATION_ROLES } = require('../models/User');
+const { sanitisePlainText, containsDangerousContent } = require('./sanitise');
 
 function isPlainObject(value) {
   // Objects only — not arrays or null.
@@ -152,6 +153,10 @@ function validateGigCreate(body) {
     return 'Title, description and price are required.';
   }
 
+  if (containsDangerousContent(title) || containsDangerousContent(description)) {
+    return 'Input contains disallowed content.';
+  }
+
   if (title.trim().length > 120) {
     return 'Title must be at most 120 characters.';
   }
@@ -172,9 +177,42 @@ function validateGigCreate(body) {
   return null;
 }
 
+// Validate, then return sanitised fields for create/update (plain text only).
+function prepareGigInput(body) {
+  const error = validateGigCreate(body);
+
+  if (error) {
+    return { error };
+  }
+
+  const title = sanitisePlainText(body.title);
+  const description = sanitisePlainText(body.description);
+
+  if (!title || !description) {
+    return { error: 'Title, description and price are required.' };
+  }
+
+  if (title.length > 120) {
+    return { error: 'Title must be at most 120 characters.' };
+  }
+
+  if (description.length > 2000) {
+    return { error: 'Description must be at most 2000 characters.' };
+  }
+
+  return {
+    value: {
+      title,
+      description,
+      price: body.price,
+    },
+  };
+}
+
 module.exports = {
   validateRegistration,
   validateLogin,
   validateAdminSeedCredentials,
   validateGigCreate,
+  prepareGigInput,
 };

@@ -398,3 +398,90 @@ describe('DELETE /api/gigs/:id', () => {
     expect(response.body).toEqual({ error: 'Gig not found.' });
   });
 });
+
+describe('gig input sanitisation', () => {
+  test('rejects script tags in title', async () => {
+    const { token } = await registerAndLogin(freelancerUser);
+
+    const response = await request(app)
+      .post('/api/gigs')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        ...validGig,
+        title: '<script>alert(1)</script>',
+      });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe('Input contains disallowed content.');
+  });
+
+  test('rejects javascript: URLs in description', async () => {
+    const { token } = await registerAndLogin(freelancerUser);
+
+    const response = await request(app)
+      .post('/api/gigs')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        ...validGig,
+        description: 'Click javascript:alert(1)',
+      });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe('Input contains disallowed content.');
+  });
+
+  test('rejects inline event-handler attributes', async () => {
+    const { token } = await registerAndLogin(freelancerUser);
+
+    const response = await request(app)
+      .post('/api/gigs')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        ...validGig,
+        description: '<img src=x onerror=alert(1)>',
+      });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe('Input contains disallowed content.');
+  });
+
+  test('strips safe HTML markup before storing', async () => {
+    const { token } = await registerAndLogin(freelancerUser);
+
+    const response = await request(app)
+      .post('/api/gigs')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        title: '<b>Logo</b> design',
+        description: 'A <em>simple</em> package',
+        price: 150,
+      });
+
+    expect(response.status).toBe(201);
+    expect(response.body.title).toBe('Logo design');
+    expect(response.body.description).toBe('A simple package');
+    expect(response.body.title).not.toMatch(/<|>/);
+    expect(response.body.description).not.toMatch(/<|>/);
+  });
+
+  test('update also rejects dangerous content', async () => {
+    const { token } = await registerAndLogin(freelancerUser);
+
+    const created = await request(app)
+      .post('/api/gigs')
+      .set('Authorization', `Bearer ${token}`)
+      .send(validGig);
+
+    const response = await request(app)
+      .put(`/api/gigs/${created.body.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        title: 'Safe title',
+        description: '<script>alert(1)</script>',
+        price: 100,
+      });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe('Input contains disallowed content.');
+  });
+});
