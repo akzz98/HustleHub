@@ -2,13 +2,14 @@ import { apiBaseUrl } from './config';
 import { getToken } from '../auth/tokenStorage';
 
 async function apiRequest(path, options = {}) {
+  const { auth = false, headers: optionHeaders, ...fetchOptions } = options;
   const url = `${apiBaseUrl}${path}`;
   const headers = {
     'Content-Type': 'application/json',
-    ...(options.headers || {}),
+    ...(optionHeaders || {}),
   };
 
-  if (options.auth) {
+  if (auth) {
     const token = getToken();
     if (token) {
       headers.Authorization = `Bearer ${token}`;
@@ -18,7 +19,7 @@ async function apiRequest(path, options = {}) {
   let response;
   try {
     response = await fetch(url, {
-      ...options,
+      ...fetchOptions,
       headers,
     });
   } catch {
@@ -56,4 +57,12 @@ function loginUser({ email, password }) {
   });
 }
 
-export { apiRequest, registerUser, loginUser };
+function listGigs() {
+  return apiRequest('/api/gigs');
+}
+
+function getGig(id) {
+  return apiRequest(`/api/gigs/${id}`);
+}
+
+export { apiRequest, registerUser, loginUser, listGigs, getGig };

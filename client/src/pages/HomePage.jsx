@@ -1,34 +1,28 @@
 import { Link } from 'react-router-dom';
+import AppNav from '../components/AppNav';
 import { useAuth } from '../auth/AuthContext';
 
 function HomePage() {
-  const { isAuthenticated, role, logout } = useAuth();
+  const { isAuthenticated, role } = useAuth();
 
   return (
-    <main className="page">
-      <h1>HustleHub+</h1>
-      <p className="lede">Freelance marketplace — browse gigs, book work, track income.</p>
+    <>
+      <AppNav />
+      <main className="page">
+        <h1>HustleHub+</h1>
+        <p className="lede">Freelance marketplace — browse gigs, book work, track income.</p>
 
-      {isAuthenticated ? (
-        <>
+        {isAuthenticated ? (
           <p className="message message-success" role="status">
-            Signed in as <strong>{role || 'user'}</strong>. Token is in sessionStorage for this
-            tab.
+            Signed in as <strong>{role || 'user'}</strong>.
           </p>
-          <p className="footer-link">
-            <button type="button" className="linkish" onClick={logout}>
-              Sign out
-            </button>
-          </p>
-        </>
-      ) : (
+        ) : null}
+
         <p className="footer-link">
-          <Link to="/login">Sign in</Link>
-          {' · '}
-          <Link to="/register">Create an account</Link>
+          <Link to="/gigs">Browse gigs</Link>
         </p>
-      )}
-    </main>
+      </main>
+    </>
   );
 }
 
