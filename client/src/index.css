@@ -24,8 +24,8 @@ body {
   min-height: 100vh;
 }
 
-main {
-  max-width: 40rem;
+.page {
+  max-width: 28rem;
   margin: 0 auto;
   padding: 2.5rem 1.25rem;
 }
@@ -35,7 +35,88 @@ h1 {
   margin: 0 0 0.75rem;
 }
 
-p {
-  margin: 0;
+.lede {
+  margin: 0 0 1.5rem;
   color: #3d3d3d;
+}
+
+.form {
+  display: grid;
+  gap: 1rem;
+}
+
+.form label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.95rem;
+}
+
+.form input[type='text'],
+.form input[type='email'],
+.form input[type='password'] {
+  font: inherit;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #b8aea2;
+  background: #fffdf9;
+  color: inherit;
+}
+
+.form fieldset {
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid #b8aea2;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.form legend {
+  padding: 0 0.35rem;
+}
+
+.form .choice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hint {
+  font-size: 0.85rem;
+  color: #5c534a;
+}
+
+.form button {
+  font: inherit;
+  padding: 0.75rem 1rem;
+  border: 1px solid #1a1a1a;
+  background: #1a1a1a;
+  color: #f7f3ee;
+  cursor: pointer;
+}
+
+.form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.message {
+  margin: 0;
+  padding: 0.75rem;
+}
+
+.message-error {
+  background: #f4e4e1;
+  color: #6b2a22;
+}
+
+.message-success {
+  background: #e3efe6;
+  color: #1f4d2d;
+}
+
+.footer-link {
+  margin: 1.5rem 0 0;
+}
+
+.footer-link a {
+  color: #1a1a1a;
 }

@@ -10,4 +10,5 @@ npm install
 npm run dev
 ```
 
-`VITE_API_URL` must point at the HTTPS API (default `https://localhost:3000`).
+Local `npm run dev` proxies `/api` to `VITE_API_PROXY_TARGET` (default `https://localhost:3000`).
+Leave `VITE_API_URL` empty so the browser uses that proxy.
