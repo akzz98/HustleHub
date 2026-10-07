@@ -27,6 +27,10 @@ function updateGig(id, title, description, price) {
   });
 }
 
+function deleteGig(id) {
+  return gigRepository.remove(id);
+}
+
 function toPublicGig(gig) {
   // Safe fields only — no internal Mongo metadata
   return {
@@ -43,5 +47,6 @@ module.exports = {
   getGigById,
   createGig,
   updateGig,
+  deleteGig,
   toPublicGig,
 };

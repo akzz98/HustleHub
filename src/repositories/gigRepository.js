@@ -58,9 +58,19 @@ async function update(id, fields) {
   return toGigRecord(doc);
 }
 
+async function remove(id) {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return null;
+  }
+
+  const doc = await Gig.findByIdAndDelete(id);
+  return toGigRecord(doc);
+}
+
 module.exports = {
   findAll,
   findById,
   create,
   update,
+  remove,
 };

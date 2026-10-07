@@ -19,5 +19,11 @@ router.put(
   requireRole('freelancer'),
   gigController.updateGig
 ); // PUT /api/gigs/:id — owner only
+router.delete(
+  '/:id',
+  authenticate,
+  requireRole('freelancer'),
+  gigController.deleteGig
+); // DELETE /api/gigs/:id — owner only
 
 module.exports = router;

@@ -77,9 +77,31 @@ async function updateGig(req, res, next) {
   }
 }
 
+async function deleteGig(req, res, next) {
+  try {
+    const existing = await gigService.getGigById(req.params.id);
+
+    if (!existing) {
+      return res.status(404).json({ error: 'Gig not found.' });
+    }
+
+    // Ownership: JWT user must own the gig.
+    if (existing.freelancerId !== req.userId) {
+      return res.status(403).json({ error: 'Forbidden.' });
+    }
+
+    await gigService.deleteGig(req.params.id);
+
+    res.status(204).send();
+  } catch (err) {
+    next(err); // unexpected failures → errorHandler (generic 500)
+  }
+}
+
 module.exports = {
   listGigs,
   getGig,
   createGig,
   updateGig,
+  deleteGig,
 };
