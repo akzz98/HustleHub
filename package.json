@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node src/server.js",
     "test": "jest",
-    "seed:admin": "node src/scripts/seedAdmin.js"
+    "seed:admin": "node src/scripts/seedAdmin.js",
+    "client:dev": "npm run dev --prefix client",
+    "client:build": "npm run build --prefix client"
   },
   "repository": {
     "type": "git",
