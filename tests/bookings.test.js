@@ -175,6 +175,18 @@ describe('POST /api/bookings', () => {
     expect(response.body).toEqual({ error: 'Gig not found.' });
   });
 
+  test('dangerous gigId content is rejected', async () => {
+    const client = await registerAndLogin(clientUser);
+
+    const response = await request(app)
+      .post('/api/bookings')
+      .set('Authorization', `Bearer ${client.token}`)
+      .send({ gigId: '<script>alert(1)</script>' });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe('Input contains disallowed content.');
+  });
+
   test('missing gigId is rejected', async () => {
     const client = await registerAndLogin(clientUser);
 
@@ -300,7 +312,7 @@ describe('booking and transaction ownership regression', () => {
     expect(response.body).toEqual({ error: 'Invalid or expired token.' });
   });
 
-  test('invalid gig id format returns 404', async () => {
+  test('invalid gig id format is rejected', async () => {
     const client = await registerAndLogin(clientUser);
 
     const response = await request(app)
@@ -308,8 +320,8 @@ describe('booking and transaction ownership regression', () => {
       .set('Authorization', `Bearer ${client.token}`)
       .send({ gigId: 'not-a-valid-id' });
 
-    expect(response.status).toBe(404);
-    expect(response.body).toEqual({ error: 'Gig not found.' });
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({ error: 'Gig id must be a valid id.' });
   });
 
   test('each booking creates its own transaction with the correct amount', async () => {

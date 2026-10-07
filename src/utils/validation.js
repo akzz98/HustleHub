@@ -64,11 +64,16 @@ function validateRegistration(body) {
     return 'Name, email, password and role are required.';
   }
 
+  // Name is displayed later — block scripting patterns before strip/store.
+  if (containsDangerousContent(name)) {
+    return 'Input contains disallowed content.';
+  }
+
   if (name.trim().length > 100) {
     return 'Name must be at most 100 characters.'; // stored name cap
   }
 
-  if (!isValidEmail(email.trim())) {
+  if (!isValidEmail(email.trim()) || containsDangerousContent(email)) {
     return 'Invalid email address.';
   }
 
@@ -82,6 +87,36 @@ function validateRegistration(body) {
   }
 
   return null;
+}
+
+// Validate, then return sanitised registration fields (plain-text name).
+function prepareRegistrationInput(body) {
+  const error = validateRegistration(body);
+
+  if (error) {
+    return { error };
+  }
+
+  const name = sanitisePlainText(body.name);
+  const email = body.email.trim().toLowerCase();
+  const role = body.role.trim();
+
+  if (!name) {
+    return { error: 'Name, email, password and role are required.' };
+  }
+
+  if (name.length > 100) {
+    return { error: 'Name must be at most 100 characters.' };
+  }
+
+  return {
+    value: {
+      name,
+      email,
+      password: body.password, // never alter passwords
+      role,
+    },
+  };
 }
 
 function validateLogin(body) {
@@ -103,7 +138,7 @@ function validateLogin(body) {
     return 'Email and password are required.';
   }
 
-  if (!isValidEmail(email.trim())) {
+  if (!isValidEmail(email.trim()) || containsDangerousContent(email)) {
     return 'Invalid email address.';
   }
 
@@ -114,16 +149,35 @@ function validateLogin(body) {
   return null;
 }
 
+function prepareLoginInput(body) {
+  const error = validateLogin(body);
+
+  if (error) {
+    return { error };
+  }
+
+  return {
+    value: {
+      email: body.email.trim().toLowerCase(),
+      password: body.password, // never alter passwords
+    },
+  };
+}
+
 function validateAdminSeedCredentials({ name, email, password }) {
   if (!isNonEmptyString(name) || !isNonEmptyString(email) || !isNonEmptyString(password)) {
     return 'ADMIN_SEED_NAME, ADMIN_SEED_EMAIL and ADMIN_SEED_PASSWORD are required.';
+  }
+
+  if (containsDangerousContent(name)) {
+    return 'ADMIN_SEED_NAME contains disallowed content.';
   }
 
   if (name.trim().length > 100) {
     return 'ADMIN_SEED_NAME must be at most 100 characters.';
   }
 
-  if (!isValidEmail(email.trim())) {
+  if (!isValidEmail(email.trim()) || containsDangerousContent(email)) {
     return 'ADMIN_SEED_EMAIL must be a valid email address.';
   }
 
@@ -132,6 +186,28 @@ function validateAdminSeedCredentials({ name, email, password }) {
   }
 
   return null;
+}
+
+function prepareAdminSeedCredentials({ name, email, password }) {
+  const error = validateAdminSeedCredentials({ name, email, password });
+
+  if (error) {
+    return { error };
+  }
+
+  const sanitisedName = sanitisePlainText(name);
+
+  if (!sanitisedName) {
+    return { error: 'ADMIN_SEED_NAME, ADMIN_SEED_EMAIL and ADMIN_SEED_PASSWORD are required.' };
+  }
+
+  return {
+    value: {
+      name: sanitisedName,
+      email: email.trim().toLowerCase(),
+      password,
+    },
+  };
 }
 
 function validateGigCreate(body) {
@@ -209,6 +285,11 @@ function prepareGigInput(body) {
   };
 }
 
+function isMongoObjectIdString(value) {
+  // 24 hex chars — avoids mongoose.isValid's 12-char false positives
+  return /^[a-fA-F0-9]{24}$/.test(value);
+}
+
 function validateBookingCreate(body) {
   if (!isPlainObject(body)) {
     return 'Invalid request body.';
@@ -224,14 +305,40 @@ function validateBookingCreate(body) {
     return 'Gig id must be a non-empty string.';
   }
 
+  if (containsDangerousContent(gigId)) {
+    return 'Input contains disallowed content.';
+  }
+
+  if (!isMongoObjectIdString(gigId.trim())) {
+    return 'Gig id must be a valid id.';
+  }
+
   return null;
+}
+
+function prepareBookingInput(body) {
+  const error = validateBookingCreate(body);
+
+  if (error) {
+    return { error };
+  }
+
+  return {
+    value: {
+      gigId: body.gigId.trim(),
+    },
+  };
 }
 
 module.exports = {
   validateRegistration,
+  prepareRegistrationInput,
   validateLogin,
+  prepareLoginInput,
   validateAdminSeedCredentials,
+  prepareAdminSeedCredentials,
   validateGigCreate,
   prepareGigInput,
   validateBookingCreate,
+  prepareBookingInput,
 };

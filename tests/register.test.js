@@ -123,4 +123,23 @@ describe('POST /api/auth/register', () => {
     expect(response.status).toBe(400);
     expect(response.body.error).toBe('Role must be client or freelancer.');
   });
+
+  test('rejects script tags in name', async () => {
+    const response = await request(app)
+      .post('/api/auth/register')
+      .send({ ...validUser, name: '<script>alert(1)</script>' });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe('Input contains disallowed content.');
+  });
+
+  test('strips harmless markup from stored name', async () => {
+    const response = await request(app)
+      .post('/api/auth/register')
+      .send({ ...validUser, name: 'John <em>Smith</em>' });
+
+    expect(response.status).toBe(201);
+    expect(response.body.name).toBe('John Smith');
+    expect(response.body.name).not.toMatch(/<|>/);
+  });
 });

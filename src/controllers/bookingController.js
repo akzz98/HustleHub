@@ -1,15 +1,15 @@
-const { validateBookingCreate } = require('../utils/validation');
+const { prepareBookingInput } = require('../utils/validation');
 const bookingService = require('../services/bookingService');
 
 async function createBooking(req, res, next) {
   try {
-    const error = validateBookingCreate(req.body);
+    const prepared = prepareBookingInput(req.body);
 
-    if (error) {
-      return res.status(400).json({ error });
+    if (prepared.error) {
+      return res.status(400).json({ error: prepared.error });
     }
 
-    const result = await bookingService.createBooking(req.body.gigId, req.userId);
+    const result = await bookingService.createBooking(prepared.value.gigId, req.userId);
 
     if (result.error === 'not_found') {
       return res.status(404).json({ error: 'Gig not found.' });

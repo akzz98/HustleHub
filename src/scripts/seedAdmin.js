@@ -3,7 +3,7 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const { connectDatabase } = require('../config/db');
 const userService = require('../services/userService');
-const { validateAdminSeedCredentials } = require('../utils/validation');
+const { prepareAdminSeedCredentials } = require('../utils/validation');
 
 async function seedAdmin({
   nodeEnv = process.env.NODE_ENV,
@@ -16,13 +16,14 @@ async function seedAdmin({
     throw new Error('Admin seeding is only allowed when NODE_ENV=development.');
   }
 
-  const validationError = validateAdminSeedCredentials({ name, email, password });
+  const prepared = prepareAdminSeedCredentials({ name, email, password });
 
-  if (validationError) {
-    throw new Error(validationError);
+  if (prepared.error) {
+    throw new Error(prepared.error);
   }
 
-  const existing = await userService.findByEmail(email);
+  const sanitised = prepared.value;
+  const existing = await userService.findByEmail(sanitised.email);
 
   if (existing) {
     if (existing.role === 'admin') {
@@ -33,7 +34,11 @@ async function seedAdmin({
     throw new Error('An account with this email already exists.');
   }
 
-  const admin = await userService.createAdminUser(name, email, password);
+  const admin = await userService.createAdminUser(
+    sanitised.name,
+    sanitised.email,
+    sanitised.password
+  );
 
   return { created: true, email: admin.email, id: admin.id };
 }
