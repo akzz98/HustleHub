@@ -18,6 +18,15 @@ function createGig(title, description, price, freelancerId) {
   });
 }
 
+function updateGig(id, title, description, price) {
+  // Does not change freelancerId — ownership is fixed at creation.
+  return gigRepository.update(id, {
+    title: title.trim(),
+    description: description.trim(),
+    price,
+  });
+}
+
 function toPublicGig(gig) {
   // Safe fields only — no internal Mongo metadata
   return {
@@ -33,5 +42,6 @@ module.exports = {
   listGigs,
   getGigById,
   createGig,
+  updateGig,
   toPublicGig,
 };

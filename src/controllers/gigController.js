@@ -45,8 +45,41 @@ async function createGig(req, res, next) {
   }
 }
 
+async function updateGig(req, res, next) {
+  try {
+    const error = validateGigCreate(req.body);
+
+    if (error) {
+      return res.status(400).json({ error });
+    }
+
+    const existing = await gigService.getGigById(req.params.id);
+
+    if (!existing) {
+      return res.status(404).json({ error: 'Gig not found.' });
+    }
+
+    // Ownership: JWT user must own the gig — never trust a body freelancerId.
+    if (existing.freelancerId !== req.userId) {
+      return res.status(403).json({ error: 'Forbidden.' });
+    }
+
+    const gig = await gigService.updateGig(
+      req.params.id,
+      req.body.title,
+      req.body.description,
+      req.body.price
+    );
+
+    res.status(200).json(gigService.toPublicGig(gig));
+  } catch (err) {
+    next(err); // unexpected failures → errorHandler (generic 500)
+  }
+}
+
 module.exports = {
   listGigs,
   getGig,
   createGig,
+  updateGig,
 };

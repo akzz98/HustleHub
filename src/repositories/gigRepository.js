@@ -40,8 +40,27 @@ async function create(gig) {
   return toGigRecord(doc);
 }
 
+async function update(id, fields) {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return null;
+  }
+
+  const doc = await Gig.findByIdAndUpdate(
+    id,
+    {
+      title: fields.title,
+      description: fields.description,
+      price: fields.price,
+    },
+    { returnDocument: 'after', runValidators: true }
+  );
+
+  return toGigRecord(doc);
+}
+
 module.exports = {
   findAll,
   findById,
   create,
+  update,
 };

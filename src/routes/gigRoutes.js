@@ -13,5 +13,11 @@ router.post(
   requireRole('freelancer'),
   gigController.createGig
 ); // POST /api/gigs — freelancer only
+router.put(
+  '/:id',
+  authenticate,
+  requireRole('freelancer'),
+  gigController.updateGig
+); // PUT /api/gigs/:id — owner only
 
 module.exports = router;

@@ -213,3 +213,102 @@ describe('GET /api/gigs/:id', () => {
     expect(response.body).toEqual({ error: 'Gig not found.' });
   });
 });
+
+describe('PUT /api/gigs/:id', () => {
+  const updatedGig = {
+    title: 'Logo redesign',
+    description: 'Updated logo package',
+    price: 200,
+  };
+
+  test('owner can update their gig', async () => {
+    const { user, token } = await registerAndLogin(freelancerUser);
+
+    const created = await request(app)
+      .post('/api/gigs')
+      .set('Authorization', `Bearer ${token}`)
+      .send(validGig);
+
+    const response = await request(app)
+      .put(`/api/gigs/${created.body.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send(updatedGig);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      id: created.body.id,
+      title: 'Logo redesign',
+      description: 'Updated logo package',
+      price: 200,
+      freelancerId: user.id,
+    });
+  });
+
+  test('another freelancer cannot update the gig', async () => {
+    const owner = await registerAndLogin(freelancerUser);
+    const other = await registerAndLogin({
+      ...freelancerUser,
+      name: 'Other Free',
+      email: 'other-freelancer@example.com',
+    });
+
+    const created = await request(app)
+      .post('/api/gigs')
+      .set('Authorization', `Bearer ${owner.token}`)
+      .send(validGig);
+
+    const response = await request(app)
+      .put(`/api/gigs/${created.body.id}`)
+      .set('Authorization', `Bearer ${other.token}`)
+      .send(updatedGig);
+
+    expect(response.status).toBe(403);
+    expect(response.body).toEqual({ error: 'Forbidden.' });
+  });
+
+  test('client role is forbidden', async () => {
+    const owner = await registerAndLogin(freelancerUser);
+    const client = await registerAndLogin(clientUser);
+
+    const created = await request(app)
+      .post('/api/gigs')
+      .set('Authorization', `Bearer ${owner.token}`)
+      .send(validGig);
+
+    const response = await request(app)
+      .put(`/api/gigs/${created.body.id}`)
+      .set('Authorization', `Bearer ${client.token}`)
+      .send(updatedGig);
+
+    expect(response.status).toBe(403);
+    expect(response.body).toEqual({ error: 'Forbidden.' });
+  });
+
+  test('missing token is rejected', async () => {
+    const { token } = await registerAndLogin(freelancerUser);
+
+    const created = await request(app)
+      .post('/api/gigs')
+      .set('Authorization', `Bearer ${token}`)
+      .send(validGig);
+
+    const response = await request(app)
+      .put(`/api/gigs/${created.body.id}`)
+      .send(updatedGig);
+
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({ error: 'Authentication required.' });
+  });
+
+  test('unknown gig returns 404', async () => {
+    const { token } = await registerAndLogin(freelancerUser);
+
+    const response = await request(app)
+      .put('/api/gigs/64b64c4f2f1c2e0012345678')
+      .set('Authorization', `Bearer ${token}`)
+      .send(updatedGig);
+
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({ error: 'Gig not found.' });
+  });
+});
