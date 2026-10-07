@@ -1,9 +1,12 @@
 const express = require('express');
 const { authenticate } = require('../middleware/authenticate');
 const { requireRole } = require('../middleware/requireRole');
+const { bookingRateLimiter } = require('../middleware/rateLimiters');
 const bookingController = require('../controllers/bookingController');
 
 const router = express.Router();
+
+router.use(bookingRateLimiter); // limit booking create/list per IP
 
 router.get(
   '/',
