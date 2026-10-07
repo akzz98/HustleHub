@@ -134,7 +134,9 @@ function RegisterPage() {
       </form>
 
       <p className="footer-link">
-        <Link to="/">Back home</Link>
+        Already registered? <Link to="/login">Sign in</Link>
+        {' · '}
+        <Link to="/">Home</Link>
       </p>
     </main>
   );

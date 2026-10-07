@@ -1,4 +1,5 @@
 import { apiBaseUrl } from './config';
+import { getToken } from '../auth/tokenStorage';
 
 async function apiRequest(path, options = {}) {
   const url = `${apiBaseUrl}${path}`;
@@ -6,6 +7,13 @@ async function apiRequest(path, options = {}) {
     'Content-Type': 'application/json',
     ...(options.headers || {}),
   };
+
+  if (options.auth) {
+    const token = getToken();
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+  }
 
   let response;
   try {
@@ -41,4 +49,11 @@ function registerUser({ name, email, password, role }) {
   });
 }
 
-export { apiRequest, registerUser };
+function loginUser({ email, password }) {
+  return apiRequest('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+export { apiRequest, registerUser, loginUser };
