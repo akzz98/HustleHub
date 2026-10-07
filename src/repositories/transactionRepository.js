@@ -44,8 +44,45 @@ async function findById(id) {
   return toTransactionRecord(doc);
 }
 
+async function findByFreelancerId(freelancerId) {
+  if (!mongoose.Types.ObjectId.isValid(freelancerId)) {
+    return [];
+  }
+
+  const docs = await Transaction.find({ freelancerId }).sort({ _id: -1 });
+  return docs.map(toTransactionRecord);
+}
+
+async function sumAmountByFreelancerId(freelancerId) {
+  if (!mongoose.Types.ObjectId.isValid(freelancerId)) {
+    return { totalIncome: 0, transactionCount: 0 };
+  }
+
+  const [result] = await Transaction.aggregate([
+    { $match: { freelancerId: new mongoose.Types.ObjectId(freelancerId) } },
+    {
+      $group: {
+        _id: '$freelancerId',
+        totalIncome: { $sum: '$amount' },
+        transactionCount: { $sum: 1 },
+      },
+    },
+  ]);
+
+  if (!result) {
+    return { totalIncome: 0, transactionCount: 0 };
+  }
+
+  return {
+    totalIncome: result.totalIncome,
+    transactionCount: result.transactionCount,
+  };
+}
+
 module.exports = {
   create,
   findByBookingId,
   findById,
+  findByFreelancerId,
+  sumAmountByFreelancerId,
 };
