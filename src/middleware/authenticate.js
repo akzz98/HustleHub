@@ -20,11 +20,13 @@ function authenticate(req, res, next) {
   try {
     const payload = tokenService.verifyAccessToken(token);
 
-    if (!payload.sub) {
+    // Both claims are required — role comes from the signed token, never the request body.
+    if (!payload.sub || !payload.role) {
       return res.status(401).json({ error: 'Invalid or expired token.' });
     }
 
     req.userId = payload.sub; // id from the token's sub claim
+    req.userRole = payload.role; // role from the verified JWT
   } catch (err) {
     // Covers bad signatures and expired tokens. Don't send jwt's error text out.
     return res.status(401).json({ error: 'Invalid or expired token.' });

@@ -30,7 +30,7 @@ describe('POST /api/auth/login', () => {
     expect(response.body.email).toBeUndefined();
   });
 
-  test('issued token is a JWT with the user id in sub', async () => {
+  test('issued token is a JWT with user id in sub and role', async () => {
     const registered = await registerUser();
 
     const response = await request(app)
@@ -40,8 +40,22 @@ describe('POST /api/auth/login', () => {
     const payload = jwt.verify(response.body.token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
 
     expect(payload.sub).toBe(registered.id);
+    expect(payload.role).toBe('client');
     expect(payload.password).toBeUndefined();
     expect(payload.passwordHash).toBeUndefined();
+    expect(payload.email).toBeUndefined();
+  });
+
+  test('login response does not include role outside the token', async () => {
+    await registerUser();
+
+    const response = await request(app)
+      .post('/api/auth/login')
+      .send({ email: validUser.email, password: validUser.password });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ token: expect.any(String) });
+    expect(response.body.role).toBeUndefined();
   });
 
   test('missing fields are rejected', async () => {

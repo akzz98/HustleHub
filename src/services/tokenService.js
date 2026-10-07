@@ -15,9 +15,9 @@ function getJwtExpiresIn() {
   return process.env.JWT_EXPIRES_IN || '1h';
 }
 
-function createAccessToken(userId) {
+function createAccessToken(userId, role) {
   return jwt.sign(
-    { sub: userId }, // user id only — no email, password, or hash
+    { sub: userId, role }, // id + role only — no email, password, or hash
     getJwtSecret(),
     { expiresIn: getJwtExpiresIn(), algorithm: 'HS256' } // HMAC-SHA256 only
   );

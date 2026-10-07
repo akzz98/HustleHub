@@ -51,9 +51,9 @@ async function login(req, res, next) {
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
-    const token = tokenService.createAccessToken(user.id);
+    const token = tokenService.createAccessToken(user.id, user.role);
 
-    res.status(200).json(tokenService.toLoginResponse(token));
+    res.status(200).json(tokenService.toLoginResponse(token)); // still { token } only
   } catch (err) {
     next(err); // unexpected failures → errorHandler (generic 500)
   }
