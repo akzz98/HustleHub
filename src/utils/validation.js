@@ -209,10 +209,29 @@ function prepareGigInput(body) {
   };
 }
 
+function validateBookingCreate(body) {
+  if (!isPlainObject(body)) {
+    return 'Invalid request body.';
+  }
+
+  const { gigId } = body;
+
+  if (gigId === undefined) {
+    return 'Gig id is required.';
+  }
+
+  if (typeof gigId !== 'string' || !isNonEmptyString(gigId)) {
+    return 'Gig id must be a non-empty string.';
+  }
+
+  return null;
+}
+
 module.exports = {
   validateRegistration,
   validateLogin,
   validateAdminSeedCredentials,
   validateGigCreate,
   prepareGigInput,
+  validateBookingCreate,
 };
