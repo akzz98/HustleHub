@@ -106,3 +106,77 @@ describe('incomeService.getFreelancerIncome', () => {
     });
   });
 });
+
+describe('GET /api/income/me', () => {
+  test('freelancer can view their own income', async () => {
+    const freelancer = await registerAndLogin(freelancerUser);
+    const client = await registerAndLogin(clientUser);
+
+    const gig = await request(app)
+      .post('/api/gigs')
+      .set('Authorization', `Bearer ${freelancer.token}`)
+      .send({ title: 'Paid gig', description: 'Work done', price: 120 });
+
+    await request(app)
+      .post('/api/bookings')
+      .set('Authorization', `Bearer ${client.token}`)
+      .send({ gigId: gig.body.id });
+
+    const response = await request(app)
+      .get('/api/income/me')
+      .set('Authorization', `Bearer ${freelancer.token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      freelancerId: freelancer.user.id,
+      totalIncome: 120,
+      transactionCount: 1,
+    });
+  });
+
+  test('ignores client-supplied freelancerId query or body', async () => {
+    const freelancer = await registerAndLogin(freelancerUser);
+    const other = await registerAndLogin(otherFreelancerUser);
+    const client = await registerAndLogin(clientUser);
+
+    const otherGig = await request(app)
+      .post('/api/gigs')
+      .set('Authorization', `Bearer ${other.token}`)
+      .send({ title: 'Other', description: 'Not mine', price: 500 });
+
+    await request(app)
+      .post('/api/bookings')
+      .set('Authorization', `Bearer ${client.token}`)
+      .send({ gigId: otherGig.body.id });
+
+    const response = await request(app)
+      .get(`/api/income/me?freelancerId=${other.user.id}`)
+      .set('Authorization', `Bearer ${freelancer.token}`)
+      .send({ freelancerId: other.user.id });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      freelancerId: freelancer.user.id,
+      totalIncome: 0,
+      transactionCount: 0,
+    });
+  });
+
+  test('client role is forbidden', async () => {
+    const client = await registerAndLogin(clientUser);
+
+    const response = await request(app)
+      .get('/api/income/me')
+      .set('Authorization', `Bearer ${client.token}`);
+
+    expect(response.status).toBe(403);
+    expect(response.body).toEqual({ error: 'Forbidden.' });
+  });
+
+  test('missing token is rejected', async () => {
+    const response = await request(app).get('/api/income/me');
+
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({ error: 'Authentication required.' });
+  });
+});

@@ -3,6 +3,7 @@ const authRoutes = require('./routes/authRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const gigRoutes = require('./routes/gigRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
+const incomeRoutes = require('./routes/incomeRoutes');
 const { errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
@@ -17,6 +18,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/gigs', gigRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/income', incomeRoutes);
 
 app.use(errorHandler); // after routes — Express only reaches this via next(err)
 
