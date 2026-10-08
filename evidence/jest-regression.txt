@@ -1,0 +1,9 @@
+
+Test Suites: 15 passed, 15 total
+Tests:       123 passed, 123 total
+Snapshots:   0 total
+Time:        20.746 s
+Ran all test suites.
+
+Captured: 2026-10-08T18:07:21.2368427+02:00
+Result: 15 suites, 123 tests passed.
