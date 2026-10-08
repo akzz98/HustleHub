@@ -1,0 +1,187 @@
+newman
+
+HustleHub+
+
+Γûí Health
+Γöö GET / ΓÇö health + security headers
+  GET https://localhost:3000/ [200 OK, 866B, 37ms]
+  ΓêÜ  Status 200
+  ΓêÜ  CSP present
+
+Γûí Auth Setup
+Γöö Register client
+  POST https://localhost:3000/api/auth/register [201 Created, 1.05kB, 195ms]
+  ΓêÜ  Status 201
+  ΓêÜ  Public fields only
+
+Γöö Register freelancer
+  POST https://localhost:3000/api/auth/register [201 Created, 1.06kB, 51ms]
+  ΓêÜ  Status 201
+
+Γöö Register other freelancer
+  POST https://localhost:3000/api/auth/register [201 Created, 1.06kB, 52ms]
+  ΓêÜ  Status 201
+
+Γöö Login client
+  POST https://localhost:3000/api/auth/login [200 OK, 1.15kB, 52ms]
+  ΓêÜ  Status 200
+  ΓêÜ  Token only
+
+Γöö Login freelancer
+  POST https://localhost:3000/api/auth/login [200 OK, 1.16kB, 50ms]
+  ΓêÜ  Status 200
+
+Γöö Login other freelancer
+  POST https://localhost:3000/api/auth/login [200 OK, 1.16kB, 51ms]
+  ΓêÜ  Status 200
+
+Γöö GET /api/profile (client)
+  GET https://localhost:3000/api/profile [200 OK, 953B, 5ms]
+  ΓêÜ  Status 200
+
+Γûí Auth Negatives
+Γöö Register ΓÇö reject admin role
+  POST https://localhost:3000/api/auth/register [400 Bad Request, 1kB, 3ms]
+  ΓêÜ  Status 400
+  ΓêÜ  Message
+
+Γöö Register ΓÇö duplicate email
+  POST https://localhost:3000/api/auth/register [409 Conflict, 1.01kB, 3ms]
+  ΓêÜ  Status 409
+
+Γöö Login ΓÇö wrong password
+  POST https://localhost:3000/api/auth/login [401 Unauthorized, 996B, 49ms]
+  ΓêÜ  Status 401
+  ΓêÜ  Generic message
+
+Γöö GET /api/profile ΓÇö missing token
+  GET https://localhost:3000/api/profile [401 Unauthorized, 898B, 1ms]
+  ΓêÜ  Status 401
+
+Γûí Gigs
+Γöö POST /api/gigs ΓÇö create (freelancer)
+  POST https://localhost:3000/api/gigs [201 Created, 1kB, 4ms]
+  ΓêÜ  Status 201
+  ΓêÜ  Has id and price
+
+Γöö POST /api/gigs ΓÇö other freelancer gig
+  POST https://localhost:3000/api/gigs [201 Created, 990B, 3ms]
+  ΓêÜ  Status 201
+
+Γöö GET /api/gigs ΓÇö list public
+  GET https://localhost:3000/api/gigs [200 OK, 1.13kB, 10ms]
+  ΓêÜ  Status 200
+  ΓêÜ  Array
+
+Γöö GET /api/gigs/:id ΓÇö view
+  GET https://localhost:3000/api/gigs/6ac79a52f08a87bb4c028e4d [200 OK, 998B, 3ms]
+  ΓêÜ  Status 200
+  ΓêÜ  Matches gigId
+
+Γöö PUT /api/gigs/:id ΓÇö update own
+  PUT https://localhost:3000/api/gigs/6ac79a52f08a87bb4c028e4d [200 OK, 998B, 9ms]
+  ΓêÜ  Status 200
+  ΓêÜ  Updated price
+
+Γûí Gigs Negatives
+Γöö POST /api/gigs ΓÇö client forbidden
+  POST https://localhost:3000/api/gigs [403 Forbidden, 881B, 2ms]
+  ΓêÜ  Status 403
+
+Γöö POST /api/gigs ΓÇö unauthenticated
+  POST https://localhost:3000/api/gigs [401 Unauthorized, 898B, 2ms]
+  ΓêÜ  Status 401
+
+Γöö PUT /api/gigs/:id ΓÇö cross-user forbidden
+  PUT https://localhost:3000/api/gigs/6ac79a52f08a87bb4c028e4d [403 Forbidden, 881B, 3ms]
+  ΓêÜ  Status 403
+
+Γöö DELETE /api/gigs/:id ΓÇö cross-user forbidden
+  DELETE https://localhost:3000/api/gigs/6ac79a52f08a87bb4c028e4d [403 Forbidden, 881B, 3ms]
+  ΓêÜ  Status 403
+
+Γûí Bookings and Transactions
+Γöö POST /api/bookings ΓÇö create (client)
+  POST https://localhost:3000/api/bookings [201 Created, 1.43kB, 4ms]
+  ΓêÜ  Status 201
+  ΓêÜ  Has confirmation + transaction
+
+Γöö GET /api/bookings ΓÇö client own
+  GET https://localhost:3000/api/bookings [200 OK, 1.12kB, 9ms]
+  ΓêÜ  Status 200
+  ΓêÜ  Includes booking
+
+Γöö GET /api/bookings ΓÇö freelancer own gigs
+  GET https://localhost:3000/api/bookings [200 OK, 1.12kB, 3ms]
+  ΓêÜ  Status 200
+  ΓêÜ  Includes booking on own gig
+
+Γûí Bookings Negatives
+Γöö POST /api/bookings ΓÇö freelancer forbidden
+  POST https://localhost:3000/api/bookings [403 Forbidden, 977B, 2ms]
+  ΓêÜ  Status 403
+
+Γöö POST /api/bookings ΓÇö unauthenticated
+  POST https://localhost:3000/api/bookings [401 Unauthorized, 994B, 1ms]
+  ΓêÜ  Status 401
+
+Γöö POST /api/bookings ΓÇö invalid gigId
+  POST https://localhost:3000/api/bookings [400 Bad Request, 995B, 2ms]
+  ΓêÜ  Status 400
+
+Γöö GET /api/bookings ΓÇö other freelancer does not see booking
+  GET https://localhost:3000/api/bookings [200 OK, 948B, 3ms]
+  ΓêÜ  Status 200
+  ΓêÜ  Cross-user booking hidden
+
+Γûí Income
+Γöö GET /api/income/me ΓÇö freelancer
+  GET https://localhost:3000/api/income/me [200 OK, 934B, 20ms]
+  ΓêÜ  Status 200
+  ΓêÜ  Income reflects booking
+
+Γûí Income Negatives
+Γöö GET /api/income/me ΓÇö client forbidden
+  GET https://localhost:3000/api/income/me [403 Forbidden, 881B, 2ms]
+  ΓêÜ  Status 403
+
+Γöö GET /api/income/me ΓÇö unauthenticated
+  GET https://localhost:3000/api/income/me [401 Unauthorized, 898B, 1ms]
+  ΓêÜ  Status 401
+
+Γûí Admin (set adminToken after seed)
+Γöö GET /api/admin/users
+  Γöî
+  Γöé 'Set collection variable adminToken from a seed/admin 
+  Γöé JWT to run this folder.'
+  Γöö
+  GET https://localhost:3000/api/admin/users [401 Unauthorized, 898B, 1ms]
+  -  [skipped] Skipped ΓÇö adminToken not set
+
+Γöö GET /api/admin/transactions/:id
+  GET https://localhost:3000/api/admin/transactions/6ac79a52f08a87bb4c028e50 [401 Unauthorized, 898B, 2ms]
+  -  [skipped] Skipped ΓÇö adminToken not set
+
+Γöö GET /api/admin/users ΓÇö client forbidden
+  GET https://localhost:3000/api/admin/users [403 Forbidden, 881B, 2ms]
+  ΓêÜ  Status 403
+
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé                         Γöé          executed Γöé           failed Γöé
+Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ
+Γöé              iterations Γöé                 1 Γöé                0 Γöé
+Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ
+Γöé                requests Γöé                34 Γöé                0 Γöé
+Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ
+Γöé            test-scripts Γöé                34 Γöé                0 Γöé
+Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ
+Γöé      prerequest-scripts Γöé                35 Γöé                0 Γöé
+Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ
+Γöé              assertions Γöé                48 Γöé                0 Γöé
+Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ
+Γöé total run duration: 3.5s                                       Γöé
+Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ
+Γöé total data received: 3.33kB (approx)                           Γöé
+Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ
+Γöé average response time: 18ms [min: 1ms, max: 195ms, s.d.: 35ms] Γöé
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
