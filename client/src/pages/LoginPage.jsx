@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { loginUser } from '../api/http';
 import { useAuth } from '../auth/AuthContext';
+import { FieldError, StatusMessage } from '../components/StatusMessage';
+import { hasFieldErrors, validateLoginForm } from '../utils/formValidation';
 
 const INITIAL_FORM = {
   email: '',
@@ -12,17 +14,34 @@ function LoginPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [form, setForm] = useState(INITIAL_FORM);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   function handleChange(event) {
     const { name, value } = event.target;
     setForm((current) => ({ ...current, [name]: value }));
+    setFieldErrors((current) => {
+      if (!current[name]) {
+        return current;
+      }
+      const next = { ...current };
+      delete next[name];
+      return next;
+    });
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
     setError('');
+
+    const nextFieldErrors = validateLoginForm(form);
+    setFieldErrors(nextFieldErrors);
+    if (hasFieldErrors(nextFieldErrors)) {
+      setError('Please fix the highlighted fields.');
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -54,9 +73,12 @@ function LoginPage() {
             type="email"
             autoComplete="email"
             required
+            aria-invalid={Boolean(fieldErrors.email)}
+            aria-describedby={fieldErrors.email ? 'email-error' : undefined}
             value={form.email}
             onChange={handleChange}
           />
+          <FieldError id="email-error" message={fieldErrors.email} />
         </label>
 
         <label htmlFor="password">
@@ -68,16 +90,15 @@ function LoginPage() {
             autoComplete="current-password"
             maxLength={128}
             required
+            aria-invalid={Boolean(fieldErrors.password)}
+            aria-describedby={fieldErrors.password ? 'password-error' : undefined}
             value={form.password}
             onChange={handleChange}
           />
+          <FieldError id="password-error" message={fieldErrors.password} />
         </label>
 
-        {error ? (
-          <p className="message message-error" role="alert">
-            {error}
-          </p>
-        ) : null}
+        <StatusMessage type="error">{error}</StatusMessage>
 
         <button type="submit" disabled={submitting}>
           {submitting ? 'Signing in…' : 'Sign in'}

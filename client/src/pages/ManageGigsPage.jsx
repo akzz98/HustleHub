@@ -3,6 +3,8 @@ import { Link, Navigate } from 'react-router-dom';
 import { createGig, deleteGig, listGigs, updateGig } from '../api/http';
 import { useAuth } from '../auth/AuthContext';
 import AppNav from '../components/AppNav';
+import { FieldError, StatusMessage } from '../components/StatusMessage';
+import { hasFieldErrors, validateGigForm } from '../utils/formValidation';
 
 const EMPTY_FORM = {
   title: '',
@@ -23,6 +25,7 @@ function ManageGigsPage() {
   const [myGigs, setMyGigs] = useState([]);
   const [form, setForm] = useState(EMPTY_FORM);
   const [editingId, setEditingId] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(true);
@@ -60,9 +63,9 @@ function ManageGigsPage() {
         <AppNav />
         <main className="page">
           <h1>Manage gigs</h1>
-          <p className="message message-error" role="alert">
+          <StatusMessage type="error">
             Only freelancer accounts can create and manage gigs.
-          </p>
+          </StatusMessage>
           <p className="footer-link">
             <Link to="/gigs">Browse gigs</Link>
           </p>
@@ -74,6 +77,14 @@ function ManageGigsPage() {
   function handleChange(event) {
     const { name, value } = event.target;
     setForm((current) => ({ ...current, [name]: value }));
+    setFieldErrors((current) => {
+      if (!current[name]) {
+        return current;
+      }
+      const next = { ...current };
+      delete next[name];
+      return next;
+    });
   }
 
   function startEdit(gig) {
@@ -83,6 +94,7 @@ function ManageGigsPage() {
       description: gig.description,
       price: String(gig.price),
     });
+    setFieldErrors({});
     setError('');
     setNotice('');
   }
@@ -90,19 +102,27 @@ function ManageGigsPage() {
   function cancelEdit() {
     setEditingId(null);
     setForm(EMPTY_FORM);
+    setFieldErrors({});
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
     setError('');
     setNotice('');
+
+    const nextFieldErrors = validateGigForm(form);
+    setFieldErrors(nextFieldErrors);
+    if (hasFieldErrors(nextFieldErrors)) {
+      setError('Please fix the highlighted fields.');
+      return;
+    }
+
     setSubmitting(true);
 
-    const price = Number(form.price);
     const payload = {
       title: form.title,
       description: form.description,
-      price,
+      price: Number(form.price),
     };
 
     try {
@@ -115,6 +135,7 @@ function ManageGigsPage() {
       }
       setForm(EMPTY_FORM);
       setEditingId(null);
+      setFieldErrors({});
       await loadMine();
     } catch (err) {
       setError(err.message || 'Could not save gig.');
@@ -164,9 +185,12 @@ function ManageGigsPage() {
               type="text"
               maxLength={120}
               required
+              aria-invalid={Boolean(fieldErrors.title)}
+              aria-describedby={fieldErrors.title ? 'title-error' : undefined}
               value={form.title}
               onChange={handleChange}
             />
+            <FieldError id="title-error" message={fieldErrors.title} />
           </label>
 
           <label htmlFor="description">
@@ -177,9 +201,12 @@ function ManageGigsPage() {
               rows={4}
               maxLength={2000}
               required
+              aria-invalid={Boolean(fieldErrors.description)}
+              aria-describedby={fieldErrors.description ? 'description-error' : undefined}
               value={form.description}
               onChange={handleChange}
             />
+            <FieldError id="description-error" message={fieldErrors.description} />
           </label>
 
           <label htmlFor="price">
@@ -191,22 +218,16 @@ function ManageGigsPage() {
               min="0"
               step="0.01"
               required
+              aria-invalid={Boolean(fieldErrors.price)}
+              aria-describedby={fieldErrors.price ? 'price-error' : undefined}
               value={form.price}
               onChange={handleChange}
             />
+            <FieldError id="price-error" message={fieldErrors.price} />
           </label>
 
-          {error ? (
-            <p className="message message-error" role="alert">
-              {error}
-            </p>
-          ) : null}
-
-          {notice ? (
-            <p className="message message-success" role="status">
-              {notice}
-            </p>
-          ) : null}
+          <StatusMessage type="error">{error}</StatusMessage>
+          <StatusMessage type="success">{notice}</StatusMessage>
 
           <div className="form-actions">
             <button type="submit" disabled={submitting}>

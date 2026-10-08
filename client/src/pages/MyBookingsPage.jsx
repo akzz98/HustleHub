@@ -3,6 +3,7 @@ import { Link, Navigate } from 'react-router-dom';
 import { listGigs, listMyBookings } from '../api/http';
 import { useAuth } from '../auth/AuthContext';
 import AppNav from '../components/AppNav';
+import { StatusMessage } from '../components/StatusMessage';
 
 function formatPrice(price) {
   return new Intl.NumberFormat(undefined, {
@@ -67,9 +68,9 @@ function MyBookingsPage() {
         <AppNav />
         <main className="page">
           <h1>My bookings</h1>
-          <p className="message message-error" role="alert">
-            This page is for client accounts. Freelancers will see bookings on their dashboard next.
-          </p>
+          <StatusMessage type="error">
+            This page is for client accounts. Freelancers can review bookings on their dashboard.
+          </StatusMessage>
           <p className="footer-link">
             <Link to="/gigs">Browse gigs</Link>
           </p>
@@ -87,11 +88,7 @@ function MyBookingsPage() {
 
         {loading ? <p>Loading…</p> : null}
 
-        {error ? (
-          <p className="message message-error" role="alert">
-            {error}
-          </p>
-        ) : null}
+        <StatusMessage type="error">{error}</StatusMessage>
 
         {!loading && !error && rows.length === 0 ? (
           <p>

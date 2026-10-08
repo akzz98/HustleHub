@@ -1,6 +1,48 @@
 import { apiBaseUrl } from './config';
 import { getToken } from '../auth/tokenStorage';
 
+class ApiError extends Error {
+  constructor(message, status = null, body = null) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.body = body;
+  }
+}
+
+let unauthorizedHandler = null;
+
+function setUnauthorizedHandler(handler) {
+  unauthorizedHandler = typeof handler === 'function' ? handler : null;
+}
+
+function friendlyMessage(status, body) {
+  if (body && typeof body.error === 'string' && body.error) {
+    return body.error;
+  }
+
+  if (status === 401) {
+    return 'Your session has expired or is invalid. Please sign in again.';
+  }
+  if (status === 403) {
+    return 'You do not have permission to do that.';
+  }
+  if (status === 404) {
+    return 'The requested item was not found.';
+  }
+  if (status === 409) {
+    return 'That action conflicts with an existing record.';
+  }
+  if (status === 429) {
+    return 'Too many requests. Please wait a moment and try again.';
+  }
+  if (status >= 500) {
+    return 'Something went wrong on the server. Please try again.';
+  }
+
+  return `Request failed (${status}).`;
+}
+
 async function apiRequest(path, options = {}) {
   const { auth = false, headers: optionHeaders, ...fetchOptions } = options;
   const url = `${apiBaseUrl}${path}`;
@@ -14,9 +56,10 @@ async function apiRequest(path, options = {}) {
 
   if (auth) {
     const token = getToken();
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
+    if (!token) {
+      throw new ApiError('Please sign in to continue.', 401);
     }
+    headers.Authorization = `Bearer ${token}`;
   }
 
   let response;
@@ -26,30 +69,34 @@ async function apiRequest(path, options = {}) {
       headers,
     });
   } catch {
-    throw new Error('Unable to reach the server. Is the API running?');
+    throw new ApiError('Unable to reach the server. Is the API running?');
   }
 
   if (response.status === 204) {
     if (!response.ok) {
-      const error = new Error(`Request failed (${response.status}).`);
-      error.status = response.status;
-      throw error;
+      throw new ApiError(friendlyMessage(response.status, null), response.status);
     }
     return null;
   }
 
   const contentType = response.headers.get('content-type') || '';
   const isJson = contentType.includes('application/json');
-  const body = isJson ? await response.json() : null;
+  let body = null;
+
+  if (isJson) {
+    try {
+      body = await response.json();
+    } catch {
+      body = null;
+    }
+  }
 
   if (!response.ok) {
-    const message =
-      (body && typeof body.error === 'string' && body.error) ||
-      `Request failed (${response.status}).`;
-    const error = new Error(message);
-    error.status = response.status;
-    error.body = body;
-    throw error;
+    if (auth && response.status === 401 && unauthorizedHandler) {
+      unauthorizedHandler();
+    }
+
+    throw new ApiError(friendlyMessage(response.status, body), response.status, body);
   }
 
   return body;
@@ -123,6 +170,8 @@ function getMyIncome() {
 }
 
 export {
+  ApiError,
+  setUnauthorizedHandler,
   apiRequest,
   registerUser,
   loginUser,

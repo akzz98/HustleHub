@@ -22,7 +22,6 @@ function App() {
           <Route path="/my-gigs" element={<ManageGigsPage />} />
           <Route path="/my-bookings" element={<MyBookingsPage />} />
           <Route path="/dashboard" element={<FreelancerDashboardPage />} />
-          {/* 8.8 graceful UI error handling */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

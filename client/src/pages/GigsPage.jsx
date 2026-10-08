@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { listGigs } from '../api/http';
 import AppNav from '../components/AppNav';
+import { StatusMessage } from '../components/StatusMessage';
 
 function formatPrice(price) {
   return new Intl.NumberFormat(undefined, {
@@ -53,11 +54,7 @@ function GigsPage() {
 
         {loading ? <p>Loading gigs…</p> : null}
 
-        {error ? (
-          <p className="message message-error" role="alert">
-            {error}
-          </p>
-        ) : null}
+        <StatusMessage type="error">{error}</StatusMessage>
 
         {!loading && !error && gigs.length === 0 ? (
           <p>No gigs yet. Freelancers can publish listings after signing in.</p>

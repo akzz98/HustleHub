@@ -1,4 +1,5 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { setUnauthorizedHandler } from '../api/http';
 import {
   clearToken,
   getToken,
@@ -32,6 +33,15 @@ function AuthProvider({ children }) {
   const logout = useCallback(() => {
     clearToken();
     setSession(buildSession(null));
+  }, []);
+
+  // Clear a dead JWT from sessionStorage when a protected API call returns 401.
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      clearToken();
+      setSession(buildSession(null));
+    });
+    return () => setUnauthorizedHandler(null);
   }, []);
 
   const value = useMemo(

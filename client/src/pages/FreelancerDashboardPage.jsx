@@ -3,6 +3,7 @@ import { Link, Navigate } from 'react-router-dom';
 import { getMyIncome, listGigs, listMyBookings } from '../api/http';
 import { useAuth } from '../auth/AuthContext';
 import AppNav from '../components/AppNav';
+import { StatusMessage } from '../components/StatusMessage';
 
 function formatPrice(price) {
   return new Intl.NumberFormat(undefined, {
@@ -75,9 +76,7 @@ function FreelancerDashboardPage() {
         <AppNav />
         <main className="page">
           <h1>Freelancer dashboard</h1>
-          <p className="message message-error" role="alert">
-            This dashboard is for freelancer accounts only.
-          </p>
+          <StatusMessage type="error">This dashboard is for freelancer accounts only.</StatusMessage>
           <p className="footer-link">
             <Link to="/gigs">Browse gigs</Link>
           </p>
@@ -97,11 +96,7 @@ function FreelancerDashboardPage() {
 
         {loading ? <p>Loading…</p> : null}
 
-        {error ? (
-          <p className="message message-error" role="alert">
-            {error}
-          </p>
-        ) : null}
+        <StatusMessage type="error">{error}</StatusMessage>
 
         {!loading && income ? (
           <section className="dashboard-income" aria-labelledby="income-heading">

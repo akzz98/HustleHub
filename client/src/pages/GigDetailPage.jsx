@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { createBooking, getGig } from '../api/http';
 import { useAuth } from '../auth/AuthContext';
 import AppNav from '../components/AppNav';
+import { StatusMessage } from '../components/StatusMessage';
 
 function formatPrice(price) {
   return new Intl.NumberFormat(undefined, {
@@ -78,11 +79,7 @@ function GigDetailPage() {
 
         {loading ? <p>Loading…</p> : null}
 
-        {error ? (
-          <p className="message message-error" role="alert">
-            {error}
-          </p>
-        ) : null}
+        <StatusMessage type="error">{error}</StatusMessage>
 
         {gig ? (
           <article>
@@ -109,11 +106,7 @@ function GigDetailPage() {
                 </button>
               ) : null}
 
-              {bookingError ? (
-                <p className="message message-error" role="alert">
-                  {bookingError}
-                </p>
-              ) : null}
+              <StatusMessage type="error">{bookingError}</StatusMessage>
 
               {bookingResult ? (
                 <div className="message message-success" role="status">

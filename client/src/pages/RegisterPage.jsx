@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { registerUser } from '../api/http';
+import { FieldError, StatusMessage } from '../components/StatusMessage';
+import { hasFieldErrors, validateRegistrationForm } from '../utils/formValidation';
 
 const INITIAL_FORM = {
   name: '',
@@ -11,6 +13,7 @@ const INITIAL_FORM = {
 
 function RegisterPage() {
   const [form, setForm] = useState(INITIAL_FORM);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -18,18 +21,35 @@ function RegisterPage() {
   function handleChange(event) {
     const { name, value } = event.target;
     setForm((current) => ({ ...current, [name]: value }));
+    setFieldErrors((current) => {
+      if (!current[name]) {
+        return current;
+      }
+      const next = { ...current };
+      delete next[name];
+      return next;
+    });
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
     setError('');
     setSuccess(null);
+
+    const nextFieldErrors = validateRegistrationForm(form);
+    setFieldErrors(nextFieldErrors);
+    if (hasFieldErrors(nextFieldErrors)) {
+      setError('Please fix the highlighted fields.');
+      return;
+    }
+
     setSubmitting(true);
 
     try {
       const user = await registerUser(form);
       setSuccess(user);
       setForm(INITIAL_FORM);
+      setFieldErrors({});
     } catch (err) {
       setError(err.message || 'Registration failed.');
     } finally {
@@ -54,9 +74,12 @@ function RegisterPage() {
             autoComplete="name"
             maxLength={100}
             required
+            aria-invalid={Boolean(fieldErrors.name)}
+            aria-describedby={fieldErrors.name ? 'name-error' : undefined}
             value={form.name}
             onChange={handleChange}
           />
+          <FieldError id="name-error" message={fieldErrors.name} />
         </label>
 
         <label htmlFor="email">
@@ -67,9 +90,12 @@ function RegisterPage() {
             type="email"
             autoComplete="email"
             required
+            aria-invalid={Boolean(fieldErrors.email)}
+            aria-describedby={fieldErrors.email ? 'email-error' : undefined}
             value={form.email}
             onChange={handleChange}
           />
+          <FieldError id="email-error" message={fieldErrors.email} />
         </label>
 
         <label htmlFor="password">
@@ -82,15 +108,18 @@ function RegisterPage() {
             minLength={8}
             maxLength={128}
             required
+            aria-invalid={Boolean(fieldErrors.password)}
+            aria-describedby={fieldErrors.password ? 'password-error' : 'password-hint'}
             value={form.password}
             onChange={handleChange}
           />
-          <span className="hint">
+          <span id="password-hint" className="hint">
             8–128 characters with uppercase, lowercase, a number, and a special character.
           </span>
+          <FieldError id="password-error" message={fieldErrors.password} />
         </label>
 
-        <fieldset>
+        <fieldset aria-invalid={Boolean(fieldErrors.role)}>
           <legend>I am a</legend>
           <label className="choice" htmlFor="role-client">
             <input
@@ -114,19 +143,15 @@ function RegisterPage() {
             />
             Freelancer
           </label>
+          <FieldError id="role-error" message={fieldErrors.role} />
         </fieldset>
 
-        {error ? (
-          <p className="message message-error" role="alert">
-            {error}
-          </p>
-        ) : null}
-
-        {success ? (
-          <p className="message message-success" role="status">
-            Account created for {success.name} ({success.email}). You can sign in next.
-          </p>
-        ) : null}
+        <StatusMessage type="error">{error}</StatusMessage>
+        <StatusMessage type="success">
+          {success
+            ? `Account created for ${success.name} (${success.email}). You can sign in next.`
+            : null}
+        </StatusMessage>
 
         <button type="submit" disabled={submitting}>
           {submitting ? 'Creating…' : 'Register'}
