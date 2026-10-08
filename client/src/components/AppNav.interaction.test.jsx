@@ -6,7 +6,7 @@ import { renderWithProviders } from '../test/renderWithProviders';
 import AppNav from './AppNav';
 
 describe('AppNav interactions', () => {
-  test('sign out clears the session and returns guest links', async () => {
+  test('9.4.3 sign out clears the session and returns guest links', async () => {
     const user = userEvent.setup();
     renderWithProviders(<AppNav />, { auth: { role: 'client', sub: 'client-1' } });
 
