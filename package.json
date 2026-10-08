@@ -9,6 +9,7 @@
     "seed:admin": "node src/scripts/seedAdmin.js",
     "client:dev": "npm run dev --prefix client",
     "client:build": "npm run build --prefix client",
+    "client:test": "npm test --prefix client",
     "test:newman": "newman run postman/HustleHub.postman_collection.json -k --reporters cli,json --reporter-json-export evidence/newman-report.json"
   },
   "repository": {
