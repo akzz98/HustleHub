@@ -186,6 +186,23 @@ h1 {
   cursor: not-allowed;
 }
 
+.dashboard-income {
+  margin: 0 0 0.5rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid #d9cfc3;
+}
+
+.dashboard-income h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.15rem;
+}
+
+.income-total {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
 .form fieldset {
   margin: 0;
   padding: 0.75rem;

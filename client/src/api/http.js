@@ -115,6 +115,13 @@ function listMyBookings() {
   });
 }
 
+function getMyIncome() {
+  return apiRequest('/api/income/me', {
+    method: 'GET',
+    auth: true,
+  });
+}
+
 export {
   apiRequest,
   registerUser,
@@ -126,4 +133,5 @@ export {
   deleteGig,
   createBooking,
   listMyBookings,
+  getMyIncome,
 };

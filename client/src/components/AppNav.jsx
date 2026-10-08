@@ -12,7 +12,10 @@ function AppNav() {
       <div className="app-nav-links">
         <Link to="/gigs">Browse gigs</Link>
         {isAuthenticated && role === 'freelancer' ? (
-          <Link to="/my-gigs">My gigs</Link>
+          <>
+            <Link to="/my-gigs">My gigs</Link>
+            <Link to="/dashboard">Dashboard</Link>
+          </>
         ) : null}
         {isAuthenticated && role === 'client' ? (
           <Link to="/my-bookings">My bookings</Link>

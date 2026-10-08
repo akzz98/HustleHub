@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
+import FreelancerDashboardPage from './pages/FreelancerDashboardPage';
 import GigDetailPage from './pages/GigDetailPage';
 import GigsPage from './pages/GigsPage';
 import HomePage from './pages/HomePage';
@@ -20,7 +21,8 @@ function App() {
           <Route path="/gigs/:id" element={<GigDetailPage />} />
           <Route path="/my-gigs" element={<ManageGigsPage />} />
           <Route path="/my-bookings" element={<MyBookingsPage />} />
-          {/* 8.7 freelancer income/bookings dashboard */}
+          <Route path="/dashboard" element={<FreelancerDashboardPage />} />
+          {/* 8.8 graceful UI error handling */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
