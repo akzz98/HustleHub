@@ -5,6 +5,7 @@ import GigsPage from './pages/GigsPage';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import ManageGigsPage from './pages/ManageGigsPage';
+import MyBookingsPage from './pages/MyBookingsPage';
 import RegisterPage from './pages/RegisterPage';
 
 function App() {
@@ -18,7 +19,8 @@ function App() {
           <Route path="/gigs" element={<GigsPage />} />
           <Route path="/gigs/:id" element={<GigDetailPage />} />
           <Route path="/my-gigs" element={<ManageGigsPage />} />
-          {/* 8.6+ bookings, income dashboard, … */}
+          <Route path="/my-bookings" element={<MyBookingsPage />} />
+          {/* 8.7 freelancer income/bookings dashboard */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

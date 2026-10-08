@@ -100,6 +100,21 @@ function deleteGig(id) {
   });
 }
 
+function createBooking(gigId) {
+  return apiRequest('/api/bookings', {
+    method: 'POST',
+    auth: true,
+    body: JSON.stringify({ gigId }),
+  });
+}
+
+function listMyBookings() {
+  return apiRequest('/api/bookings', {
+    method: 'GET',
+    auth: true,
+  });
+}
+
 export {
   apiRequest,
   registerUser,
@@ -109,4 +124,6 @@ export {
   createGig,
   updateGig,
   deleteGig,
+  createBooking,
+  listMyBookings,
 };

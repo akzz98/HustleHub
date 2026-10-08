@@ -14,6 +14,9 @@ function AppNav() {
         {isAuthenticated && role === 'freelancer' ? (
           <Link to="/my-gigs">My gigs</Link>
         ) : null}
+        {isAuthenticated && role === 'client' ? (
+          <Link to="/my-bookings">My bookings</Link>
+        ) : null}
         {isAuthenticated ? (
           <>
             <span className="nav-meta">{role}</span>
