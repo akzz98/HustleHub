@@ -5,9 +5,12 @@ async function apiRequest(path, options = {}) {
   const { auth = false, headers: optionHeaders, ...fetchOptions } = options;
   const url = `${apiBaseUrl}${path}`;
   const headers = {
-    'Content-Type': 'application/json',
     ...(optionHeaders || {}),
   };
+
+  if (fetchOptions.body !== undefined) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   if (auth) {
     const token = getToken();
@@ -24,6 +27,15 @@ async function apiRequest(path, options = {}) {
     });
   } catch {
     throw new Error('Unable to reach the server. Is the API running?');
+  }
+
+  if (response.status === 204) {
+    if (!response.ok) {
+      const error = new Error(`Request failed (${response.status}).`);
+      error.status = response.status;
+      throw error;
+    }
+    return null;
   }
 
   const contentType = response.headers.get('content-type') || '';
@@ -65,4 +77,36 @@ function getGig(id) {
   return apiRequest(`/api/gigs/${id}`);
 }
 
-export { apiRequest, registerUser, loginUser, listGigs, getGig };
+function createGig({ title, description, price }) {
+  return apiRequest('/api/gigs', {
+    method: 'POST',
+    auth: true,
+    body: JSON.stringify({ title, description, price }),
+  });
+}
+
+function updateGig(id, { title, description, price }) {
+  return apiRequest(`/api/gigs/${id}`, {
+    method: 'PUT',
+    auth: true,
+    body: JSON.stringify({ title, description, price }),
+  });
+}
+
+function deleteGig(id) {
+  return apiRequest(`/api/gigs/${id}`, {
+    method: 'DELETE',
+    auth: true,
+  });
+}
+
+export {
+  apiRequest,
+  registerUser,
+  loginUser,
+  listGigs,
+  getGig,
+  createGig,
+  updateGig,
+  deleteGig,
+};

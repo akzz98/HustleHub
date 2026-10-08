@@ -91,12 +91,62 @@ h1 {
 
 .form input[type='text'],
 .form input[type='email'],
-.form input[type='password'] {
+.form input[type='password'],
+.form input[type='number'],
+.form textarea {
   font: inherit;
   padding: 0.65rem 0.75rem;
   border: 1px solid #b8aea2;
   background: #fffdf9;
   color: inherit;
+}
+
+.form textarea {
+  resize: vertical;
+  min-height: 6rem;
+}
+
+.form-heading {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.button-secondary {
+  font: inherit;
+  padding: 0.75rem 1rem;
+  border: 1px solid #1a1a1a;
+  background: transparent;
+  color: #1a1a1a;
+  cursor: pointer;
+}
+
+.manage-section {
+  margin-top: 2.5rem;
+}
+
+.manage-section h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.25rem;
+}
+
+.manage-gig-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.9rem 0;
+}
+
+.row-actions {
+  display: flex;
+  gap: 0.85rem;
+  flex-shrink: 0;
 }
 
 .form fieldset {
