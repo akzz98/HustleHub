@@ -37,7 +37,7 @@ The API runs on Node.js and Express over HTTPS (Express, 2026; Node.js, 2026). P
 | bcrypt | Password hashing (bcrypt, n.d.) |
 | jsonwebtoken | JWT HS256 sign/verify (Jones, Bradley and Sakimura, 2015) |
 | Helmet | Security headers and CSP |
-| express-rate-limit | Auth route rate limiting |
+| express-rate-limit | Auth and booking rate limiting |
 | dotenv | Environment config (dotenv, n.d.) |
 | Jest + SuperTest | Backend tests (`mongodb-memory-server`) |
 | Vitest + Testing Library | Frontend tests |
@@ -164,7 +164,7 @@ flowchart TB
   subgraph controls ["Cross-cutting controls"]
     TLS["HTTPS / TLS"]
     HELM["Helmet headers + CSP"]
-    RATE["Auth rate limit"]
+    RATE["Auth 20 and booking 30 per 15 min"]
     VAL["Validation + sanitise"]
     HASH["bcrypt password hashing"]
     JWT["JWT HS256 - sub + role"]
@@ -184,7 +184,7 @@ flowchart TB
 - **Admin HTTP** — GET only for users, gigs, bookings, transactions. No create/update/delete.
 - **Login failures** — unknown email and wrong password both return 401 `Invalid email or password.`
 - **Helmet** — security headers and Content-Security-Policy before routes.
-- **Rate limiting** — applied on auth routes to slow brute-force attempts.
+- **Rate limiting** — auth routes (register and login share one bucket): **20** requests per 15 minutes per IP. Booking routes (create and list): **30** requests per 15 minutes per IP. Over the limit the API returns **429** `{ error: "Too many requests, please try again later." }`.
 - **HTTPS** — `https.createServer` only. Missing certs or `JWT_SECRET` stops the process (Node.js, 2026; OWASP, n.d.).
 - **Frontend token** — JWT in `sessionStorage` (cleared when the tab closes). Expired API sessions redirect to Sign in with `reason=expired`.
 - **Secrets** — `.env`, `certs/`, and local data artefacts stay gitignored (Git, 2026; OWASP, 2021).
@@ -193,7 +193,8 @@ flowchart TB
 |---|---|
 | HTTPS / TLS | `server.js` |
 | Helmet / CSP | `middleware/securityHeaders.js` |
-| Auth rate limit | auth routes middleware |
+| Auth rate limit | auth routes, 20 / 15 min |
+| Booking rate limit | booking routes, 30 / 15 min |
 | Validation | `src/utils/validation.js` |
 | bcrypt | user service |
 | JWT + role | token service + `authenticate` |
@@ -362,10 +363,12 @@ Covers auth pages, browse, booking confirm flow, manage gigs, nav, home variants
 ### Postman / Newman
 
 ```powershell
-npm run test:newman
+npm run seed:admin
+# Sign in as the seeded admin, then pass the token. Do not commit it.
+npm run test:newman -- --env-var "adminToken=PASTE_ADMIN_JWT"
 ```
 
-Runs the collection with `-k` (self-signed TLS) and writes `evidence/newman-report.json`. Requires a running API and `MONGODB_URI` available to that process.
+Runs the collection with `-k` (self-signed TLS) and writes `evidence/newman-report.json`. Requires a running API and `MONGODB_URI` available to that process. Without `adminToken`, the admin success requests are skipped. The client-forbidden admin check still runs.
 
 ### HTTPS manual check
 

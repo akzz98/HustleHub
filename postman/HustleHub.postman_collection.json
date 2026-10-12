@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "hustlehub-plus-assessment",
     "name": "HustleHub+",
-    "description": "HustleHub+ Part 2 API collection.\n\nBase URL defaults to https://localhost:3000.\n\nSelf-signed certificates: in Postman go to Settings and turn off SSL certificate verification.\n\nSuggested order: Auth Setup → Gigs → Bookings → Income → Negatives.\n\nAdmin requests need `adminToken` from a development seed login (not public register).\n\nNewman: `npx newman run postman/HustleHub.postman_collection.json -k`",
+    "description": "HustleHub+ Part 2 API collection.\n\nBase URL defaults to https://localhost:3000.\n\nSelf-signed certificates: in Postman go to Settings and turn off SSL certificate verification.\n\nSuggested order: Auth Setup → Gigs → Bookings → Income → Negatives.\n\nAdmin requests need `adminToken` from a development seed login (not public register).\n\nNewman: `npx newman run postman/HustleHub.postman_collection.json -k --env-var adminToken=<seeded admin JWT>`. The collection copies that env var into `adminToken` when the collection value is empty.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -34,6 +34,12 @@
           "  pm.collectionVariables.set('clientEmail', `client-${runId}@example.com`);",
           "  pm.collectionVariables.set('freelancerEmail', `freelancer-${runId}@example.com`);",
           "  pm.collectionVariables.set('otherFreelancerEmail', `other-free-${runId}@example.com`);",
+          "}",
+          "if (!pm.collectionVariables.get('adminToken')) {",
+          "  const adminToken = pm.environment.get('adminToken');",
+          "  if (adminToken) {",
+          "    pm.collectionVariables.set('adminToken', adminToken);",
+          "  }",
           "}"
         ]
       }
