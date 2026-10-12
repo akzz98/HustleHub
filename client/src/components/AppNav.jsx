@@ -54,16 +54,24 @@ function AppNav() {
               {name ? <span className="nav-name">{name}</span> : null}
               <span className="nav-meta">{role}</span>
             </span>
-            <button type="button" className="linkish" onClick={logout}>
+            <button type="button" className="nav-signout" onClick={logout}>
               Sign out
             </button>
           </>
         ) : (
           <>
-            <NavLink to="/login" className={linkClass} end>
+            <NavLink
+              to="/login"
+              className={({ isActive }) => (isActive ? 'nav-signin is-current' : 'nav-signin')}
+              end
+            >
               Sign in
             </NavLink>
-            <NavLink to="/register" className={linkClass} end>
+            <NavLink
+              to="/register"
+              className={({ isActive }) => (isActive ? 'nav-register is-current' : 'nav-register')}
+              end
+            >
               Register
             </NavLink>
           </>
