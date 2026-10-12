@@ -7,9 +7,11 @@ import { readTokenPayload } from '../auth/tokenStorage';
 import AppNav from '../components/AppNav';
 import PasswordField from '../components/PasswordField';
 import { FieldError, StatusMessage } from '../components/StatusMessage';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 import { hasFieldErrors, validateLoginForm } from '../utils/formValidation';
 
 function LoginPage() {
+  useDocumentTitle('Sign in');
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -76,7 +78,7 @@ function LoginPage() {
   return (
     <>
       <AppNav />
-      <main className="page">
+      <main id="main-content" className="page" tabIndex={-1}>
         <h1>Sign in</h1>
         <p className="lede">
           Sign in to browse, book, or manage gigs. You stay signed in on this tab until you close it

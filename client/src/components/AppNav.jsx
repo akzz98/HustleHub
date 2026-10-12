@@ -1,31 +1,51 @@
-import { Link } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+
+function linkClass({ isActive }) {
+  return isActive ? 'is-current' : undefined;
+}
 
 function AppNav() {
   const { isAuthenticated, role, name, logout } = useAuth();
 
   return (
     <nav className="app-nav" aria-label="Main">
-      <Link to="/" className="brand">
+      <NavLink to="/" className={({ isActive }) => (isActive ? 'brand is-current' : 'brand')} end>
         HustleHub+
-      </Link>
+      </NavLink>
       <div className="app-nav-links">
-        <Link to="/gigs">Browse gigs</Link>
+        <NavLink to="/gigs" className={linkClass}>
+          Browse gigs
+        </NavLink>
         {isAuthenticated && role === 'freelancer' ? (
           <>
-            <Link to="/my-gigs">My gigs</Link>
-            <Link to="/dashboard">Dashboard</Link>
+            <NavLink to="/my-gigs" className={linkClass}>
+              My gigs
+            </NavLink>
+            <NavLink to="/dashboard" className={linkClass} end>
+              Dashboard
+            </NavLink>
           </>
         ) : null}
         {isAuthenticated && role === 'client' ? (
-          <Link to="/my-bookings">My bookings</Link>
+          <NavLink to="/my-bookings" className={linkClass} end>
+            My bookings
+          </NavLink>
         ) : null}
         {isAuthenticated && role === 'admin' ? (
           <>
-            <Link to="/admin/users">Users</Link>
-            <Link to="/admin/gigs">Gigs</Link>
-            <Link to="/admin/bookings">Bookings</Link>
-            <Link to="/admin/transactions">Transactions</Link>
+            <NavLink to="/admin/users" className={linkClass}>
+              Users
+            </NavLink>
+            <NavLink to="/admin/gigs" className={linkClass}>
+              Gigs
+            </NavLink>
+            <NavLink to="/admin/bookings" className={linkClass}>
+              Bookings
+            </NavLink>
+            <NavLink to="/admin/transactions" className={linkClass}>
+              Transactions
+            </NavLink>
           </>
         ) : null}
         {isAuthenticated ? (
@@ -40,8 +60,12 @@ function AppNav() {
           </>
         ) : (
           <>
-            <Link to="/login">Sign in</Link>
-            <Link to="/register">Register</Link>
+            <NavLink to="/login" className={linkClass} end>
+              Sign in
+            </NavLink>
+            <NavLink to="/register" className={linkClass} end>
+              Register
+            </NavLink>
           </>
         )}
       </div>

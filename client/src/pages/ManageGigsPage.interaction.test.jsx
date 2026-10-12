@@ -137,7 +137,6 @@ describe('ManageGigsPage interactions', () => {
       gigs = gigs.filter((gig) => gig.id !== id);
       return null;
     });
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
 
     renderWithProviders(<ManageGigsPage />, {
       route: '/my-gigs',
@@ -146,12 +145,40 @@ describe('ManageGigsPage interactions', () => {
 
     const row = (await screen.findByRole('link', { name: 'Disposable gig' })).closest('li');
     await user.click(within(row).getByRole('button', { name: 'Delete' }));
+    expect(deleteGig).not.toHaveBeenCalled();
 
-    expect(window.confirm).toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Confirm delete' }));
+
     expect(await screen.findByText('Gig deleted.')).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.queryByRole('link', { name: 'Disposable gig' })).not.toBeInTheDocument();
     });
     expect(deleteGig).toHaveBeenCalledWith('gig-1');
+  });
+
+  test('edit marks the row and shows remaining character counts', async () => {
+    const user = userEvent.setup();
+    listGigs.mockResolvedValue([
+      {
+        id: 'gig-1',
+        title: 'Old title',
+        description: 'Old description',
+        price: 40,
+        freelancerId: FREELANCER_ID,
+      },
+    ]);
+
+    renderWithProviders(<ManageGigsPage />, {
+      route: '/my-gigs',
+      auth: { role: 'freelancer', sub: FREELANCER_ID },
+    });
+
+    const row = (await screen.findByRole('link', { name: 'Old title' })).closest('li');
+    await user.click(within(row).getByRole('button', { name: 'Edit' }));
+
+    expect(row).toHaveClass('is-editing');
+    expect(screen.getByText('Editing this gig')).toBeInTheDocument();
+    expect(screen.getByText('111 characters left')).toBeInTheDocument();
+    expect(screen.getByText('1985 characters left')).toBeInTheDocument();
   });
 });

@@ -5,6 +5,7 @@ import { useAuth } from '../auth/AuthContext';
 import AppNav from '../components/AppNav';
 import LoadingRegion from '../components/LoadingRegion';
 import { StatusMessage } from '../components/StatusMessage';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 import { formatBookingStatus } from '../utils/bookingStatus';
 
 function formatPrice(price) {
@@ -17,7 +18,7 @@ function formatPrice(price) {
 
 function GuestHome() {
   return (
-    <main className="page">
+    <main id="main-content" className="page" tabIndex={-1}>
       <h1>HustleHub+</h1>
       <p className="lede">
         A freelance marketplace where clients book gigs and freelancers get paid for confirmed work.
@@ -115,7 +116,7 @@ function ClientHome() {
   }, []);
 
   return (
-    <main className="page page-wide">
+    <main id="main-content" className="page page-wide ui-sans" tabIndex={-1}>
       <h1>Home</h1>
       <p className="lede">Your bookings at a glance. Browse the catalog when you are ready to hire.</p>
 
@@ -208,7 +209,7 @@ function FreelancerHome() {
   }, []);
 
   return (
-    <main className="page page-wide">
+    <main id="main-content" className="page page-wide ui-sans" tabIndex={-1}>
       <h1>Home</h1>
       <p className="lede">
         Income from confirmed bookings on your gigs, plus clients who have booked with you.
@@ -264,7 +265,7 @@ function FreelancerHome() {
 
 function AdminHome() {
   return (
-    <main className="page">
+    <main id="main-content" className="page" tabIndex={-1}>
       <h1>Home</h1>
       <p className="lede">You are signed in as an admin. Browse the public catalog anytime.</p>
       <p className="home-cta-row">
@@ -277,6 +278,7 @@ function AdminHome() {
 }
 
 function HomePage() {
+  useDocumentTitle('Home');
   const { isAuthenticated, role } = useAuth();
 
   let body = <GuestHome />;
@@ -288,7 +290,7 @@ function HomePage() {
     body = <AdminHome />;
   } else if (isAuthenticated) {
     body = (
-      <main className="page">
+      <main id="main-content" className="page" tabIndex={-1}>
         <h1>Home</h1>
         <p className="lede">Signed in. Choose a destination from the navigation.</p>
         <p className="home-cta-row">

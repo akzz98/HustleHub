@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
 import AuthRedirectBridge from './components/AuthRedirectBridge';
 import RequireAdmin from './components/RequireAdmin';
+import SkipLink from './components/SkipLink';
 import FreelancerDashboardPage from './pages/FreelancerDashboardPage';
 import GigDetailPage from './pages/GigDetailPage';
 import GigsPage from './pages/GigsPage';
@@ -18,6 +19,7 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <SkipLink />
         <AuthRedirectBridge />
         <Routes>
           <Route path="/" element={<HomePage />} />

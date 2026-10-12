@@ -6,6 +6,7 @@ import { buildLoginPath } from '../auth/authRedirect';
 import AppNav from '../components/AppNav';
 import LoadingRegion from '../components/LoadingRegion';
 import { StatusMessage } from '../components/StatusMessage';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 import { formatBookingStatus } from '../utils/bookingStatus';
 
 function formatPrice(price) {
@@ -17,6 +18,7 @@ function formatPrice(price) {
 }
 
 function MyBookingsPage() {
+  useDocumentTitle('My bookings');
   const location = useLocation();
   const { isAuthenticated, role } = useAuth();
   const [rows, setRows] = useState([]);
@@ -64,7 +66,7 @@ function MyBookingsPage() {
     return (
       <>
         <AppNav />
-        <main className="page">
+        <main id="main-content" className="page" tabIndex={-1}>
           <h1>My bookings</h1>
           <StatusMessage type="error">
             This page is for client accounts. Freelancers can review bookings on their dashboard.
@@ -80,7 +82,7 @@ function MyBookingsPage() {
   return (
     <>
       <AppNav />
-      <main className="page page-wide">
+      <main id="main-content" className="page page-wide ui-sans" tabIndex={-1}>
         <h1>My bookings</h1>
         <p className="lede">Bookings you placed as a client, with simulated confirmation status.</p>
 

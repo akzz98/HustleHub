@@ -5,6 +5,7 @@ import { useAuth } from '../auth/AuthContext';
 import AppNav from '../components/AppNav';
 import LoadingRegion from '../components/LoadingRegion';
 import { StatusMessage } from '../components/StatusMessage';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 import { formatBookingStatus } from '../utils/bookingStatus';
 
 function formatPrice(price) {
@@ -25,6 +26,7 @@ function GigDetailPage() {
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState(false);
   const [awaitingConfirm, setAwaitingConfirm] = useState(false);
+  useDocumentTitle(gig?.title || 'Gig');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -69,7 +71,7 @@ function GigDetailPage() {
   return (
     <>
       <AppNav />
-      <main className="page page-wide">
+      <main id="main-content" className="page page-wide ui-sans" tabIndex={-1}>
         <p className="footer-link" style={{ marginTop: 0 }}>
           <Link to="/gigs">← All gigs</Link>
         </p>

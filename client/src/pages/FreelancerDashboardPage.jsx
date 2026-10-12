@@ -6,6 +6,7 @@ import { buildLoginPath } from '../auth/authRedirect';
 import AppNav from '../components/AppNav';
 import LoadingRegion from '../components/LoadingRegion';
 import { StatusMessage } from '../components/StatusMessage';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 import { formatBookingStatus } from '../utils/bookingStatus';
 
 function formatPrice(price) {
@@ -17,6 +18,7 @@ function formatPrice(price) {
 }
 
 function FreelancerDashboardPage() {
+  useDocumentTitle('Dashboard');
   const location = useLocation();
   const { isAuthenticated, role } = useAuth();
   const [income, setIncome] = useState(null);
@@ -82,7 +84,7 @@ function FreelancerDashboardPage() {
     return (
       <>
         <AppNav />
-        <main className="page">
+        <main id="main-content" className="page" tabIndex={-1}>
           <h1>Freelancer dashboard</h1>
           <StatusMessage type="error">This dashboard is for freelancer accounts only.</StatusMessage>
           <p className="footer-link">
@@ -96,7 +98,7 @@ function FreelancerDashboardPage() {
   return (
     <>
       <AppNav />
-      <main className="page page-wide">
+      <main id="main-content" className="page page-wide ui-sans" tabIndex={-1}>
         <h1>Freelancer dashboard</h1>
         <p className="lede">
           Income from confirmed bookings on your gigs, plus bookings clients have placed with you.

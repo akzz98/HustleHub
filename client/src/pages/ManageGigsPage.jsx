@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, Navigate, useLocation } from 'react-router-dom';
 import { createGig, deleteGig, listGigs, updateGig } from '../api/http';
 import { useAuth } from '../auth/AuthContext';
@@ -6,6 +6,7 @@ import { buildLoginPath } from '../auth/authRedirect';
 import AppNav from '../components/AppNav';
 import LoadingRegion from '../components/LoadingRegion';
 import { FieldError, StatusMessage } from '../components/StatusMessage';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 import { hasFieldErrors, validateGigForm } from '../utils/formValidation';
 
 const EMPTY_FORM = {
@@ -13,6 +14,9 @@ const EMPTY_FORM = {
   description: '',
   price: '',
 };
+
+const TITLE_MAX = 120;
+const DESCRIPTION_MAX = 2000;
 
 function formatPrice(price) {
   return new Intl.NumberFormat(undefined, {
@@ -23,17 +27,21 @@ function formatPrice(price) {
 }
 
 function ManageGigsPage() {
+  useDocumentTitle('My gigs');
   const location = useLocation();
   const { isAuthenticated, role, userId } = useAuth();
+  const formRef = useRef(null);
   const [myGigs, setMyGigs] = useState([]);
   const [form, setForm] = useState(EMPTY_FORM);
   const [editingId, setEditingId] = useState(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
   const [error, setError] = useState('');
   const [listError, setListError] = useState('');
   const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const loadMine = useCallback(async () => {
     setLoading(true);
@@ -52,13 +60,24 @@ function ManageGigsPage() {
     }
   }, [userId]);
 
-  function focusNewGigForm() {
-    cancelEdit();
+  function scrollToForm() {
+    const formEl = formRef.current;
+    if (!formEl) {
+      return;
+    }
+    if (typeof formEl.scrollIntoView === 'function') {
+      formEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
     const titleInput = document.getElementById('title');
     if (titleInput) {
       titleInput.focus();
-      titleInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
+  }
+
+  function focusNewGigForm() {
+    cancelEdit();
+    setPendingDeleteId(null);
+    scrollToForm();
   }
 
   useEffect(() => {
@@ -80,7 +99,7 @@ function ManageGigsPage() {
     return (
       <>
         <AppNav />
-        <main className="page">
+        <main id="main-content" className="page" tabIndex={-1}>
           <h1>Manage gigs</h1>
           <StatusMessage type="error">
             Only freelancer accounts can create and manage gigs.
@@ -108,6 +127,7 @@ function ManageGigsPage() {
 
   function startEdit(gig) {
     setEditingId(gig.id);
+    setPendingDeleteId(null);
     setForm({
       title: gig.title,
       description: gig.description,
@@ -116,6 +136,10 @@ function ManageGigsPage() {
     setFieldErrors({});
     setError('');
     setNotice('');
+    // Scroll after paint so the Edit heading is visible.
+    requestAnimationFrame(() => {
+      scrollToForm();
+    });
   }
 
   function cancelEdit() {
@@ -163,69 +187,93 @@ function ManageGigsPage() {
     }
   }
 
-  async function handleDelete(gig) {
-    const confirmed = window.confirm(`Delete “${gig.title}”? This cannot be undone.`);
-    if (!confirmed) {
-      return;
-    }
-
+  async function confirmDelete(gig) {
     setError('');
     setNotice('');
+    setDeleting(true);
     try {
       await deleteGig(gig.id);
       if (editingId === gig.id) {
         cancelEdit();
       }
+      setPendingDeleteId(null);
       setNotice('Gig deleted.');
       await loadMine();
     } catch (err) {
       setError(err.message || 'Could not delete gig.');
+    } finally {
+      setDeleting(false);
     }
   }
+
+  const titleRemaining = TITLE_MAX - form.title.length;
+  const descriptionRemaining = DESCRIPTION_MAX - form.description.length;
 
   return (
     <>
       <AppNav />
-      <main className="page page-wide">
+      <main id="main-content" className="page page-wide" tabIndex={-1}>
         <h1>Manage your gigs</h1>
         <p className="lede">
           Create, update, or remove the gigs you publish. Only your own listings appear here.
         </p>
 
-        <form className="form" onSubmit={handleSubmit} noValidate>
+        <form
+          ref={formRef}
+          id="gig-form"
+          className="form form-narrow"
+          onSubmit={handleSubmit}
+          noValidate
+        >
           <h2 className="form-heading">{editingId ? 'Edit gig' : 'New gig'}</h2>
 
-          <label htmlFor="title">
-            Title
-            <input
-              id="title"
-              name="title"
-              type="text"
-              maxLength={120}
-              required
-              aria-invalid={Boolean(fieldErrors.title)}
-              aria-describedby={fieldErrors.title ? 'title-error' : undefined}
-              value={form.title}
-              onChange={handleChange}
-            />
+          <div className="field-block">
+            <label htmlFor="title">
+              Title
+              <input
+                id="title"
+                name="title"
+                type="text"
+                maxLength={TITLE_MAX}
+                required
+                aria-invalid={Boolean(fieldErrors.title)}
+                aria-describedby={
+                  fieldErrors.title ? 'title-error title-count' : 'title-count'
+                }
+                value={form.title}
+                onChange={handleChange}
+              />
+            </label>
+            <span id="title-count" className="char-count">
+              {titleRemaining} characters left
+            </span>
             <FieldError id="title-error" message={fieldErrors.title} />
-          </label>
+          </div>
 
-          <label htmlFor="description">
-            Description
-            <textarea
-              id="description"
-              name="description"
-              rows={4}
-              maxLength={2000}
-              required
-              aria-invalid={Boolean(fieldErrors.description)}
-              aria-describedby={fieldErrors.description ? 'description-error' : undefined}
-              value={form.description}
-              onChange={handleChange}
-            />
+          <div className="field-block">
+            <label htmlFor="description">
+              Description
+              <textarea
+                id="description"
+                name="description"
+                rows={4}
+                maxLength={DESCRIPTION_MAX}
+                required
+                aria-invalid={Boolean(fieldErrors.description)}
+                aria-describedby={
+                  fieldErrors.description
+                    ? 'description-error description-count'
+                    : 'description-count'
+                }
+                value={form.description}
+                onChange={handleChange}
+              />
+            </label>
+            <span id="description-count" className="char-count">
+              {descriptionRemaining} characters left
+            </span>
             <FieldError id="description-error" message={fieldErrors.description} />
-          </label>
+          </div>
 
           <label htmlFor="price">
             Price (USD)
@@ -248,7 +296,7 @@ function ManageGigsPage() {
           <StatusMessage type="success">{notice}</StatusMessage>
 
           <div className="form-actions">
-            <button type="submit" disabled={submitting}>
+            <button type="submit" disabled={submitting || deleting}>
               {submitting ? 'Saving…' : editingId ? 'Save changes' : 'Create gig'}
             </button>
             {editingId ? (
@@ -259,7 +307,7 @@ function ManageGigsPage() {
           </div>
         </form>
 
-        <section className="manage-section" aria-labelledby="my-gigs-heading">
+        <section className="manage-section ui-sans" aria-labelledby="my-gigs-heading">
           <h2 id="my-gigs-heading">Your listings</h2>
           <LoadingRegion loading={loading} label="Loading your gigs…">
             <StatusMessage type="error">{listError}</StatusMessage>
@@ -282,24 +330,66 @@ function ManageGigsPage() {
             ) : null}
             {!listError && myGigs.length > 0 ? (
               <ul className="gig-list">
-                {myGigs.map((gig) => (
-                  <li key={gig.id} className="manage-gig-row">
-                    <div>
-                      <Link to={`/gigs/${gig.id}`} className="gig-title">
-                        {gig.title}
-                      </Link>
-                      <div className="gig-price">{formatPrice(gig.price)}</div>
-                    </div>
-                    <div className="row-actions">
-                      <button type="button" className="linkish" onClick={() => startEdit(gig)}>
-                        Edit
-                      </button>
-                      <button type="button" className="linkish" onClick={() => handleDelete(gig)}>
-                        Delete
-                      </button>
-                    </div>
-                  </li>
-                ))}
+                {myGigs.map((gig) => {
+                  const isEditing = editingId === gig.id;
+                  const isPendingDelete = pendingDeleteId === gig.id;
+
+                  return (
+                    <li
+                      key={gig.id}
+                      className={`manage-gig-row${isEditing ? ' is-editing' : ''}`}
+                    >
+                      <div>
+                        <Link to={`/gigs/${gig.id}`} className="gig-title">
+                          {gig.title}
+                        </Link>
+                        <div className="gig-price">{formatPrice(gig.price)}</div>
+                        {isEditing ? <p className="hint editing-marker">Editing this gig</p> : null}
+                        {isPendingDelete ? (
+                          <div className="inline-confirm">
+                            <p>Delete “{gig.title}”? This cannot be undone.</p>
+                            <div className="form-actions">
+                              <button
+                                type="button"
+                                className="primary-action"
+                                disabled={deleting}
+                                onClick={() => confirmDelete(gig)}
+                              >
+                                {deleting ? 'Deleting…' : 'Confirm delete'}
+                              </button>
+                              <button
+                                type="button"
+                                className="button-secondary"
+                                disabled={deleting}
+                                onClick={() => setPendingDeleteId(null)}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                      {!isPendingDelete ? (
+                        <div className="row-actions">
+                          <button type="button" className="linkish" onClick={() => startEdit(gig)}>
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            className="linkish"
+                            onClick={() => {
+                              setPendingDeleteId(gig.id);
+                              setNotice('');
+                              setError('');
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      ) : null}
+                    </li>
+                  );
+                })}
               </ul>
             ) : null}
           </LoadingRegion>

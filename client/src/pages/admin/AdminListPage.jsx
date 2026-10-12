@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import AppNav from '../../components/AppNav';
 import { StatusMessage } from '../../components/StatusMessage';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 import { getAdminResource } from './adminResources';
 
 function AdminListPage() {
   const { resourceKey } = useParams();
   const resource = getAdminResource(resourceKey);
+  useDocumentTitle(resource?.title || 'Admin');
   const [rows, setRows] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -51,7 +53,7 @@ function AdminListPage() {
   return (
     <>
       <AppNav />
-      <main className="page page-catalog">
+      <main id="main-content" className="page page-catalog ui-sans" tabIndex={-1}>
         <h1>{resource.title}</h1>
         <p className="lede">
           Read-only admin oversight. Open a row for details. Nothing can be created, edited, or

@@ -20,12 +20,12 @@ describe('AppNav', () => {
   });
 
   test('guest nav shows sign in and register', () => {
-    renderWithProviders(<AppNav />);
+    renderWithProviders(<AppNav />, { route: '/login' });
 
     expect(screen.getByRole('navigation', { name: 'Main' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'HustleHub+' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Browse gigs' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Sign in' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Sign in' })).toHaveClass('is-current');
     expect(screen.getByRole('link', { name: 'Register' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'My gigs' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'My bookings' })).not.toBeInTheDocument();

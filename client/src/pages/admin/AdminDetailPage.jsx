@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import AppNav from '../../components/AppNav';
 import { StatusMessage } from '../../components/StatusMessage';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 import { getAdminResource } from './adminResources';
 
 function AdminDetailPage() {
   const { resourceKey, id } = useParams();
   const resource = getAdminResource(resourceKey);
+  useDocumentTitle(resource ? `${resource.singular}` : 'Admin');
   const [item, setItem] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -53,7 +55,7 @@ function AdminDetailPage() {
   return (
     <>
       <AppNav />
-      <main className="page page-wide">
+      <main id="main-content" className="page page-wide ui-sans" tabIndex={-1}>
         <p className="footer-link" style={{ marginTop: 0 }}>
           <Link to={resource.listPath}>← All {resource.title.toLowerCase()}</Link>
         </p>

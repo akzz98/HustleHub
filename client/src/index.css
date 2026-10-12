@@ -24,6 +24,80 @@ body {
   min-height: 100vh;
 }
 
+.skip-link {
+  position: absolute;
+  left: 0.75rem;
+  top: -3rem;
+  z-index: 100;
+  padding: 0.5rem 0.85rem;
+  background: #1a1a1a;
+  color: #f7f3ee;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: 0.75rem;
+}
+
+:focus-visible {
+  outline: 2px solid #1a1a1a;
+  outline-offset: 2px;
+}
+
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible),
+input:focus:not(:focus-visible),
+textarea:focus:not(:focus-visible),
+select:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.ui-sans,
+.gig-list,
+.gig-price,
+.gig-price-detail,
+.catalog-count,
+.dashboard-income,
+.admin-detail {
+  font-family: 'IBM Plex Sans', 'Segoe UI', 'Helvetica Neue', sans-serif;
+}
+
+.form-narrow {
+  max-width: 28rem;
+}
+
+.field-block {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.char-count {
+  font-size: 0.8rem;
+  color: #5c534a;
+}
+
+.manage-gig-row.is-editing {
+  background: #efe8df;
+  margin: 0 -0.5rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  outline: 1px solid #cbbfaf;
+}
+
+.editing-marker {
+  margin: 0.35rem 0 0;
+}
+
+.inline-confirm {
+  margin-top: 0.75rem;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.inline-confirm p {
+  margin: 0;
+}
+
 .app-nav {
   display: flex;
   flex-wrap: wrap;
@@ -50,6 +124,13 @@ body {
 
 .app-nav-links a {
   color: #1a1a1a;
+  text-decoration: none;
+}
+
+.app-nav-links a.is-current,
+.app-nav .brand.is-current {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
 }
 
 .nav-user {

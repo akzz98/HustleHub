@@ -5,6 +5,7 @@ import { useAuth } from '../auth/AuthContext';
 import AppNav from '../components/AppNav';
 import LoadingRegion from '../components/LoadingRegion';
 import { StatusMessage } from '../components/StatusMessage';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const EXCERPT_LENGTH = 140;
 
@@ -65,6 +66,7 @@ function filterGigs(gigs, query) {
 }
 
 function GigsPage() {
+  useDocumentTitle('Browse gigs');
   const { isAuthenticated, role } = useAuth();
   const [gigs, setGigs] = useState([]);
   const [error, setError] = useState('');
@@ -109,7 +111,7 @@ function GigsPage() {
   return (
     <>
       <AppNav />
-      <main className="page page-catalog">
+      <main id="main-content" className="page page-catalog ui-sans" tabIndex={-1}>
         <h1>Browse gigs</h1>
         <p className="lede">Public listings from freelancers. Open a gig for full details.</p>
 

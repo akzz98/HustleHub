@@ -5,6 +5,7 @@ import { buildLoginPath } from '../auth/authRedirect';
 import AppNav from '../components/AppNav';
 import PasswordField from '../components/PasswordField';
 import { FieldError, StatusMessage } from '../components/StatusMessage';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 import { hasFieldErrors, validateRegistrationForm } from '../utils/formValidation';
 
 const INITIAL_FORM = {
@@ -15,6 +16,7 @@ const INITIAL_FORM = {
 };
 
 function RegisterPage() {
+  useDocumentTitle('Register');
   const [form, setForm] = useState(INITIAL_FORM);
   const [fieldErrors, setFieldErrors] = useState({});
   const [error, setError] = useState('');
@@ -64,7 +66,7 @@ function RegisterPage() {
     return (
       <>
         <AppNav />
-        <main className="page">
+        <main id="main-content" className="page" tabIndex={-1}>
           <h1>Account created</h1>
           <p className="lede">
             Welcome, {success.name}. Your account for {success.email} is ready.
@@ -88,7 +90,7 @@ function RegisterPage() {
   return (
     <>
       <AppNav />
-      <main className="page">
+      <main id="main-content" className="page" tabIndex={-1}>
         <h1>Create account</h1>
         <p className="lede">
           Create an account to get started. Choose whether you want to hire freelancers or offer your
