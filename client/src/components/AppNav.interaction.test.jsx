@@ -1,11 +1,26 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { getToken } from '../auth/tokenStorage';
 import { renderWithProviders } from '../test/renderWithProviders';
 import AppNav from './AppNav';
 
+vi.mock('../api/http', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    getProfile: vi.fn(),
+  };
+});
+
+import { getProfile } from '../api/http';
+
 describe('AppNav interactions', () => {
+  beforeEach(() => {
+    getProfile.mockReset();
+    getProfile.mockResolvedValue({ id: 'client-1', name: 'Ada', email: 'ada@example.com' });
+  });
+
   test('9.4.3 sign out clears the session and returns guest links', async () => {
     const user = userEvent.setup();
     renderWithProviders(<AppNav />, { auth: { role: 'client', sub: 'client-1' } });

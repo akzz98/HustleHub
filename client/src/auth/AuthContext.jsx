@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { setUnauthorizedHandler } from '../api/http';
+import { getProfile, setUnauthorizedHandler } from '../api/http';
 import { redirectToLogin } from './authRedirect';
 import {
   clearToken,
@@ -25,6 +25,7 @@ function buildSession(token) {
 
 function AuthProvider({ children }) {
   const [session, setSession] = useState(() => buildSession(getToken()));
+  const [profile, setProfile] = useState(null);
 
   const login = useCallback((token) => {
     setToken(token);
@@ -34,6 +35,7 @@ function AuthProvider({ children }) {
   const logout = useCallback(() => {
     clearToken();
     setSession(buildSession(null));
+    setProfile(null);
   }, []);
 
   // Clear a dead JWT and send the person back to Sign in with where they were.
@@ -42,19 +44,47 @@ function AuthProvider({ children }) {
       const from = `${window.location.pathname}${window.location.search}`;
       clearToken();
       setSession(buildSession(null));
+      setProfile(null);
       redirectToLogin({ from, reason: 'expired' });
     });
     return () => setUnauthorizedHandler(null);
   }, []);
 
+  useEffect(() => {
+    if (!session.token) {
+      setProfile(null);
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    getProfile()
+      .then((data) => {
+        if (!cancelled) {
+          setProfile(data);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setProfile(null);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [session.token]);
+
   const value = useMemo(
     () => ({
       ...session,
+      profile,
+      name: profile?.name ?? null,
       isAuthenticated: Boolean(session.token),
       login,
       logout,
     }),
-    [session, login, logout]
+    [session, profile, login, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

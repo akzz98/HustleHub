@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
 import AuthRedirectBridge from './components/AuthRedirectBridge';
+import RequireAdmin from './components/RequireAdmin';
 import FreelancerDashboardPage from './pages/FreelancerDashboardPage';
 import GigDetailPage from './pages/GigDetailPage';
 import GigsPage from './pages/GigsPage';
@@ -10,6 +11,8 @@ import ManageGigsPage from './pages/ManageGigsPage';
 import MyBookingsPage from './pages/MyBookingsPage';
 import NotFoundPage from './pages/NotFoundPage';
 import RegisterPage from './pages/RegisterPage';
+import AdminDetailPage from './pages/admin/AdminDetailPage';
+import AdminListPage from './pages/admin/AdminListPage';
 
 function App() {
   return (
@@ -25,6 +28,22 @@ function App() {
           <Route path="/my-gigs" element={<ManageGigsPage />} />
           <Route path="/my-bookings" element={<MyBookingsPage />} />
           <Route path="/dashboard" element={<FreelancerDashboardPage />} />
+          <Route
+            path="/admin/:resourceKey"
+            element={
+              <RequireAdmin>
+                <AdminListPage />
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path="/admin/:resourceKey/:id"
+            element={
+              <RequireAdmin>
+                <AdminDetailPage />
+              </RequireAdmin>
+            }
+          />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>

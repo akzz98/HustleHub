@@ -169,6 +169,45 @@ function getMyIncome() {
   });
 }
 
+function getProfile() {
+  return apiRequest('/api/profile', {
+    method: 'GET',
+    auth: true,
+  });
+}
+
+function listAdminUsers() {
+  return apiRequest('/api/admin/users', { method: 'GET', auth: true });
+}
+
+function getAdminUser(id) {
+  return apiRequest(`/api/admin/users/${id}`, { method: 'GET', auth: true });
+}
+
+function listAdminGigs() {
+  return apiRequest('/api/admin/gigs', { method: 'GET', auth: true });
+}
+
+function getAdminGig(id) {
+  return apiRequest(`/api/admin/gigs/${id}`, { method: 'GET', auth: true });
+}
+
+function listAdminBookings() {
+  return apiRequest('/api/admin/bookings', { method: 'GET', auth: true });
+}
+
+function getAdminBooking(id) {
+  return apiRequest(`/api/admin/bookings/${id}`, { method: 'GET', auth: true });
+}
+
+function listAdminTransactions() {
+  return apiRequest('/api/admin/transactions', { method: 'GET', auth: true });
+}
+
+function getAdminTransaction(id) {
+  return apiRequest(`/api/admin/transactions/${id}`, { method: 'GET', auth: true });
+}
+
 export {
   ApiError,
   setUnauthorizedHandler,
@@ -183,4 +222,13 @@ export {
   createBooking,
   listMyBookings,
   getMyIncome,
+  getProfile,
+  listAdminUsers,
+  getAdminUser,
+  listAdminGigs,
+  getAdminGig,
+  listAdminBookings,
+  getAdminBooking,
+  listAdminTransactions,
+  getAdminTransaction,
 };
