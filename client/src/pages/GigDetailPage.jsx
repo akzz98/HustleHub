@@ -73,7 +73,9 @@ function GigDetailPage() {
       <AppNav />
       <main id="main-content" className="page page-wide ui-sans" tabIndex={-1}>
         <p className="footer-link" style={{ marginTop: 0 }}>
-          <Link to="/gigs">← All gigs</Link>
+          <Link className="back-link" to="/gigs">
+            All gigs
+          </Link>
         </p>
 
         <LoadingRegion loading={loading} label="Loading gig…">
@@ -105,8 +107,11 @@ function GigDetailPage() {
                 ) : null}
 
                 {!isOwnGig && !isAuthenticated ? (
-                  <p>
-                    <Link to="/login">Sign in</Link> as a client to book.
+                  <p className="booking-signin">
+                    <Link className="inline-action" to="/login">
+                      Sign in
+                    </Link>
+                    <span>as a client to book.</span>
                   </p>
                 ) : null}
 
@@ -174,7 +179,9 @@ function GigDetailPage() {
                       </p>
                     ) : null}
                     <p>
-                      <Link to="/my-bookings">View my bookings</Link>
+                      <Link className="inline-action" to="/my-bookings">
+                        View my bookings
+                      </Link>
                     </p>
                   </div>
                 ) : null}

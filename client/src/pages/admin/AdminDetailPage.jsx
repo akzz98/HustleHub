@@ -57,7 +57,9 @@ function AdminDetailPage() {
       <AppNav />
       <main id="main-content" className="page page-wide ui-sans" tabIndex={-1}>
         <p className="footer-link" style={{ marginTop: 0 }}>
-          <Link to={resource.listPath}>← All {resource.title.toLowerCase()}</Link>
+          <Link className="back-link" to={resource.listPath}>
+            All {resource.title.toLowerCase()}
+          </Link>
         </p>
 
         <h1>{resource.singular}</h1>

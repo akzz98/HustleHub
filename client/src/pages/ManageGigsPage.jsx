@@ -105,7 +105,9 @@ function ManageGigsPage() {
             Only freelancer accounts can create and manage gigs.
           </StatusMessage>
           <p className="footer-link">
-            <Link to="/gigs">Browse gigs</Link>
+            <Link className="inline-action" to="/gigs">
+              Browse gigs
+            </Link>
           </p>
         </main>
       </>

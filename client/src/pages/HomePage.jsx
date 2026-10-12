@@ -143,7 +143,9 @@ function ClientHome() {
           ) : null}
           {!error && rows.length > 0 ? (
             <p className="footer-link">
-              <Link to="/my-bookings">View all bookings</Link>
+              <Link className="inline-action" to="/my-bookings">
+                View all bookings
+              </Link>
             </p>
           ) : null}
         </LoadingRegion>
@@ -227,7 +229,9 @@ function FreelancerHome() {
               {income.transactionCount === 1 ? 'transaction' : 'transactions'}.
             </p>
             <p className="footer-link" style={{ marginTop: '0.75rem' }}>
-              <Link to="/dashboard">Open full dashboard</Link>
+              <Link className="inline-action" to="/dashboard">
+                Open full dashboard
+              </Link>
             </p>
           </section>
         ) : null}

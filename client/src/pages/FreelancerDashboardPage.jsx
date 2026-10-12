@@ -88,7 +88,9 @@ function FreelancerDashboardPage() {
           <h1>Freelancer dashboard</h1>
           <StatusMessage type="error">This dashboard is for freelancer accounts only.</StatusMessage>
           <p className="footer-link">
-            <Link to="/gigs">Browse gigs</Link>
+            <Link className="inline-action" to="/gigs">
+              Browse gigs
+            </Link>
           </p>
         </main>
       </>
@@ -123,7 +125,9 @@ function FreelancerDashboardPage() {
                   {income.transactionCount === 1 ? 'transaction' : 'transactions'}.
                 </p>
                 <p className="footer-link" style={{ marginTop: '0.75rem' }}>
-                  <Link to="/my-gigs">Manage your gigs</Link>
+                  <Link className="inline-action" to="/my-gigs">
+                    Manage your gigs
+                  </Link>
                 </p>
               </>
             ) : null}

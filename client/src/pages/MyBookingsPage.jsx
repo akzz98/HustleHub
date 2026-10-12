@@ -72,7 +72,9 @@ function MyBookingsPage() {
             This page is for client accounts. Freelancers can review bookings on their dashboard.
           </StatusMessage>
           <p className="footer-link">
-            <Link to="/gigs">Browse gigs</Link>
+            <Link className="inline-action" to="/gigs">
+              Browse gigs
+            </Link>
           </p>
         </main>
       </>
