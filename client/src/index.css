@@ -121,6 +121,37 @@ h1 {
   text-decoration: none;
 }
 
+.secondary-action-link {
+  display: inline-block;
+  font: inherit;
+  padding: 0.75rem 1rem;
+  border: 1px solid #1a1a1a;
+  background: transparent;
+  color: #1a1a1a;
+  text-decoration: none;
+}
+
+.home-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1.5rem 0 0;
+}
+
+.how-it-works {
+  margin: 0.75rem 0 0;
+  padding-left: 1.25rem;
+  color: #3d3d3d;
+}
+
+.how-it-works li {
+  margin-bottom: 0.45rem;
+}
+
+.how-it-works li:last-child {
+  margin-bottom: 0;
+}
+
 .form input[type='text'],
 .form input[type='email'],
 .form input[type='password'],

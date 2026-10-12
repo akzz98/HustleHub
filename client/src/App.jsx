@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
 import AuthRedirectBridge from './components/AuthRedirectBridge';
 import FreelancerDashboardPage from './pages/FreelancerDashboardPage';
@@ -8,6 +8,7 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import ManageGigsPage from './pages/ManageGigsPage';
 import MyBookingsPage from './pages/MyBookingsPage';
+import NotFoundPage from './pages/NotFoundPage';
 import RegisterPage from './pages/RegisterPage';
 
 function App() {
@@ -24,7 +25,7 @@ function App() {
           <Route path="/my-gigs" element={<ManageGigsPage />} />
           <Route path="/my-bookings" element={<MyBookingsPage />} />
           <Route path="/dashboard" element={<FreelancerDashboardPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
