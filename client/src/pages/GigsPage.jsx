@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { listGigs } from '../api/http';
 import { useAuth } from '../auth/AuthContext';
 import AppNav from '../components/AppNav';
+import LoadingRegion from '../components/LoadingRegion';
 import { StatusMessage } from '../components/StatusMessage';
 
 const EXCERPT_LENGTH = 140;
@@ -148,63 +149,63 @@ function GigsPage() {
           </p>
         ) : null}
 
-        {loading ? <p>Loading gigs…</p> : null}
+        <LoadingRegion loading={loading} label="Loading gigs…">
+          <StatusMessage type="error">{error}</StatusMessage>
 
-        <StatusMessage type="error">{error}</StatusMessage>
-
-        {error ? (
-          <p className="home-cta-row">
-            <button type="button" className="primary-action" onClick={load}>
-              Retry
-            </button>
-          </p>
-        ) : null}
-
-        {catalogEmpty ? (
-          <>
-            <p>No gigs yet. Freelancers can publish listings after signing in.</p>
+          {error ? (
             <p className="home-cta-row">
-              {isAuthenticated && role === 'freelancer' ? (
-                <Link className="primary-action-link" to="/my-gigs">
-                  Create a gig
-                </Link>
-              ) : (
-                <Link className="primary-action-link" to="/register">
-                  Register to publish
-                </Link>
-              )}
-            </p>
-          </>
-        ) : null}
-
-        {noMatches ? (
-          <>
-            <p>No gigs match that search.</p>
-            <p className="home-cta-row">
-              <button type="button" className="primary-action" onClick={() => setQuery('')}>
-                Clear search
+              <button type="button" className="primary-action" onClick={load}>
+                Retry
               </button>
             </p>
-          </>
-        ) : null}
+          ) : null}
 
-        {!loading && !error && visible.length > 0 ? (
-          <ul className="gig-list">
-            {visible.map((gig) => (
-              <li key={gig.id}>
-                <Link to={`/gigs/${gig.id}`} className="gig-list-item">
-                  <span className="gig-list-copy">
-                    <span className="gig-title">{gig.title}</span>
-                    {gig.description ? (
-                      <span className="gig-excerpt">{excerpt(gig.description)}</span>
-                    ) : null}
-                  </span>
-                  <span className="gig-price">{formatPrice(gig.price)}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        ) : null}
+          {catalogEmpty ? (
+            <>
+              <p>No gigs yet. Freelancers can publish listings after signing in.</p>
+              <p className="home-cta-row">
+                {isAuthenticated && role === 'freelancer' ? (
+                  <Link className="primary-action-link" to="/my-gigs">
+                    Publish a gig
+                  </Link>
+                ) : (
+                  <Link className="primary-action-link" to="/register">
+                    Register to publish
+                  </Link>
+                )}
+              </p>
+            </>
+          ) : null}
+
+          {noMatches ? (
+            <>
+              <p>No gigs match that search.</p>
+              <p className="home-cta-row">
+                <button type="button" className="primary-action" onClick={() => setQuery('')}>
+                  Clear search
+                </button>
+              </p>
+            </>
+          ) : null}
+
+          {!error && visible.length > 0 ? (
+            <ul className="gig-list">
+              {visible.map((gig) => (
+                <li key={gig.id}>
+                  <Link to={`/gigs/${gig.id}`} className="gig-list-item">
+                    <span className="gig-list-copy">
+                      <span className="gig-title">{gig.title}</span>
+                      {gig.description ? (
+                        <span className="gig-excerpt">{excerpt(gig.description)}</span>
+                      ) : null}
+                    </span>
+                    <span className="gig-price">{formatPrice(gig.price)}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </LoadingRegion>
       </main>
     </>
   );

@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, Navigate, useLocation } from 'react-router-dom';
 import { listGigs, listMyBookings } from '../api/http';
 import { useAuth } from '../auth/AuthContext';
 import { buildLoginPath } from '../auth/authRedirect';
 import AppNav from '../components/AppNav';
+import LoadingRegion from '../components/LoadingRegion';
 import { StatusMessage } from '../components/StatusMessage';
 import { formatBookingStatus } from '../utils/bookingStatus';
 
@@ -22,44 +23,33 @@ function MyBookingsPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const [bookings, gigs] = await Promise.all([listMyBookings(), listGigs()]);
+      const gigById = new Map((Array.isArray(gigs) ? gigs : []).map((gig) => [gig.id, gig]));
+      const enriched = (Array.isArray(bookings) ? bookings : []).map((booking) => ({
+        ...booking,
+        gig: gigById.get(booking.gigId) || null,
+      }));
+      setRows(enriched);
+    } catch (err) {
+      setRows([]);
+      setError(err.message || 'Could not load bookings.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!isAuthenticated || role !== 'client') {
       return undefined;
     }
 
-    let cancelled = false;
-
-    async function load() {
-      setLoading(true);
-      setError('');
-      try {
-        const [bookings, gigs] = await Promise.all([listMyBookings(), listGigs()]);
-        if (cancelled) {
-          return;
-        }
-
-        const gigById = new Map((Array.isArray(gigs) ? gigs : []).map((gig) => [gig.id, gig]));
-        const enriched = (Array.isArray(bookings) ? bookings : []).map((booking) => ({
-          ...booking,
-          gig: gigById.get(booking.gigId) || null,
-        }));
-        setRows(enriched);
-      } catch (err) {
-        if (!cancelled) {
-          setError(err.message || 'Could not load bookings.');
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    }
-
     load();
-    return () => {
-      cancelled = true;
-    };
-  }, [isAuthenticated, role]);
+    return undefined;
+  }, [isAuthenticated, role, load]);
 
   if (!isAuthenticated) {
     return (
@@ -94,37 +84,50 @@ function MyBookingsPage() {
         <h1>My bookings</h1>
         <p className="lede">Bookings you placed as a client, with simulated confirmation status.</p>
 
-        {loading ? <p>Loading…</p> : null}
+        <LoadingRegion loading={loading} label="Loading bookings…">
+          <StatusMessage type="error">{error}</StatusMessage>
 
-        <StatusMessage type="error">{error}</StatusMessage>
+          {error ? (
+            <p className="home-cta-row">
+              <button type="button" className="primary-action" onClick={load}>
+                Retry
+              </button>
+            </p>
+          ) : null}
 
-        {!loading && !error && rows.length === 0 ? (
-          <p>
-            No bookings yet. <Link to="/gigs">Browse gigs</Link> to place one.
-          </p>
-        ) : null}
+          {!error && rows.length === 0 ? (
+            <>
+              <p>No bookings yet.</p>
+              <p className="home-cta-row">
+                <Link className="primary-action-link" to="/gigs">
+                  Browse gigs
+                </Link>
+              </p>
+            </>
+          ) : null}
 
-        {!loading && rows.length > 0 ? (
-          <ul className="gig-list">
-            {rows.map((booking) => (
-              <li key={booking.id} className="manage-gig-row">
-                <div>
-                  {booking.gig ? (
-                    <Link to={`/gigs/${booking.gigId}`} className="gig-title">
-                      {booking.gig.title}
-                    </Link>
-                  ) : (
-                    <span className="gig-title">Gig {booking.gigId}</span>
-                  )}
-                  <div className="hint">
-                    {formatBookingStatus(booking.status)}
-                    {booking.gig ? ` · ${formatPrice(booking.gig.price)}` : ''}
+          {!error && rows.length > 0 ? (
+            <ul className="gig-list">
+              {rows.map((booking) => (
+                <li key={booking.id} className="manage-gig-row">
+                  <div>
+                    {booking.gig ? (
+                      <Link to={`/gigs/${booking.gigId}`} className="gig-title">
+                        {booking.gig.title}
+                      </Link>
+                    ) : (
+                      <span className="gig-title">Gig {booking.gigId}</span>
+                    )}
+                    <div className="hint">
+                      {formatBookingStatus(booking.status)}
+                      {booking.gig ? ` · ${formatPrice(booking.gig.price)}` : ''}
+                    </div>
                   </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        ) : null}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </LoadingRegion>
       </main>
     </>
   );

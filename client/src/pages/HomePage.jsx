@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { getMyIncome, listGigs, listMyBookings } from '../api/http';
 import { useAuth } from '../auth/AuthContext';
 import AppNav from '../components/AppNav';
+import LoadingRegion from '../components/LoadingRegion';
 import { StatusMessage } from '../components/StatusMessage';
 import { formatBookingStatus } from '../utils/bookingStatus';
 
@@ -45,9 +46,9 @@ function GuestHome() {
   );
 }
 
-function BookingPreviewList({ rows, emptyMessage }) {
+function BookingPreviewList({ rows, emptyContent }) {
   if (rows.length === 0) {
-    return <p>{emptyMessage}</p>;
+    return emptyContent;
   }
 
   return (
@@ -118,35 +119,42 @@ function ClientHome() {
       <h1>Home</h1>
       <p className="lede">Your bookings at a glance. Browse the catalog when you are ready to hire.</p>
 
-      {loading ? <p>Loading…</p> : null}
-      <StatusMessage type="error">{error}</StatusMessage>
-
-      {!loading && !error ? (
-        <section aria-labelledby="home-bookings-heading">
-          <h2 id="home-bookings-heading" className="form-heading">
-            Your bookings
-          </h2>
-          <BookingPreviewList
-            rows={rows}
-            emptyMessage={
-              <>
-                No bookings yet. <Link to="/gigs">Browse gigs</Link> to place one.
-              </>
-            }
-          />
-          {rows.length > 0 ? (
+      <section aria-labelledby="home-bookings-heading">
+        <h2 id="home-bookings-heading" className="form-heading">
+          Your bookings
+        </h2>
+        <LoadingRegion loading={loading} label="Loading bookings…">
+          <StatusMessage type="error">{error}</StatusMessage>
+          {!error ? (
+            <BookingPreviewList
+              rows={rows}
+              emptyContent={
+                <>
+                  <p>No bookings yet.</p>
+                  <p className="home-cta-row">
+                    <Link className="primary-action-link" to="/gigs">
+                      Browse gigs
+                    </Link>
+                  </p>
+                </>
+              }
+            />
+          ) : null}
+          {!error && rows.length > 0 ? (
             <p className="footer-link">
               <Link to="/my-bookings">View all bookings</Link>
             </p>
           ) : null}
-        </section>
-      ) : null}
+        </LoadingRegion>
+      </section>
 
-      <p className="home-cta-row">
-        <Link className="primary-action-link" to="/gigs">
-          Browse gigs
-        </Link>
-      </p>
+      {!loading && !error && rows.length > 0 ? (
+        <p className="home-cta-row">
+          <Link className="primary-action-link" to="/gigs">
+            Browse gigs
+          </Link>
+        </p>
+      ) : null}
     </main>
   );
 }
@@ -206,35 +214,50 @@ function FreelancerHome() {
         Income from confirmed bookings on your gigs, plus clients who have booked with you.
       </p>
 
-      {loading ? <p>Loading…</p> : null}
-      <StatusMessage type="error">{error}</StatusMessage>
+      <LoadingRegion loading={loading} label="Loading home…">
+        <StatusMessage type="error">{error}</StatusMessage>
 
-      {!loading && income ? (
-        <section className="dashboard-income" aria-labelledby="home-income-heading">
-          <h2 id="home-income-heading">Income</h2>
-          <p className="income-total">{formatPrice(income.totalIncome)}</p>
-          <p className="hint">
-            From {income.transactionCount}{' '}
-            {income.transactionCount === 1 ? 'transaction' : 'transactions'}.
+        {!error && income ? (
+          <section className="dashboard-income" aria-labelledby="home-income-heading">
+            <h2 id="home-income-heading">Income</h2>
+            <p className="income-total">{formatPrice(income.totalIncome)}</p>
+            <p className="hint">
+              From {income.transactionCount}{' '}
+              {income.transactionCount === 1 ? 'transaction' : 'transactions'}.
+            </p>
+            <p className="footer-link" style={{ marginTop: '0.75rem' }}>
+              <Link to="/dashboard">Open full dashboard</Link>
+            </p>
+          </section>
+        ) : null}
+
+        {!error ? (
+          <section className="manage-section" aria-labelledby="home-incoming-heading">
+            <h2 id="home-incoming-heading">Incoming bookings</h2>
+            <BookingPreviewList
+              rows={bookings}
+              emptyContent={
+                <>
+                  <p>No bookings on your gigs yet.</p>
+                  <p className="home-cta-row">
+                    <Link className="primary-action-link" to="/my-gigs">
+                      Publish a gig
+                    </Link>
+                  </p>
+                </>
+              }
+            />
+          </section>
+        ) : null}
+
+        {!error && bookings.length > 0 ? (
+          <p className="home-cta-row">
+            <Link className="primary-action-link" to="/my-gigs">
+              Create a gig
+            </Link>
           </p>
-          <p className="footer-link" style={{ marginTop: '0.75rem' }}>
-            <Link to="/dashboard">Open full dashboard</Link>
-          </p>
-        </section>
-      ) : null}
-
-      {!loading && !error ? (
-        <section className="manage-section" aria-labelledby="home-incoming-heading">
-          <h2 id="home-incoming-heading">Incoming bookings</h2>
-          <BookingPreviewList rows={bookings} emptyMessage="No bookings on your gigs yet." />
-        </section>
-      ) : null}
-
-      <p className="home-cta-row">
-        <Link className="primary-action-link" to="/my-gigs">
-          Create a gig
-        </Link>
-      </p>
+        ) : null}
+      </LoadingRegion>
     </main>
   );
 }

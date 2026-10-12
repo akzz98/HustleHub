@@ -4,6 +4,7 @@ import { createGig, deleteGig, listGigs, updateGig } from '../api/http';
 import { useAuth } from '../auth/AuthContext';
 import { buildLoginPath } from '../auth/authRedirect';
 import AppNav from '../components/AppNav';
+import LoadingRegion from '../components/LoadingRegion';
 import { FieldError, StatusMessage } from '../components/StatusMessage';
 import { hasFieldErrors, validateGigForm } from '../utils/formValidation';
 
@@ -29,25 +30,36 @@ function ManageGigsPage() {
   const [editingId, setEditingId] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
   const [error, setError] = useState('');
+  const [listError, setListError] = useState('');
   const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
   const loadMine = useCallback(async () => {
     setLoading(true);
-    setError('');
+    setListError('');
     try {
       const all = await listGigs();
       const mine = (Array.isArray(all) ? all : []).filter(
-        (gig) => gig.freelancerId === userId
+        (gig) => String(gig.freelancerId) === String(userId)
       );
       setMyGigs(mine);
     } catch (err) {
-      setError(err.message || 'Could not load your gigs.');
+      setMyGigs([]);
+      setListError(err.message || 'Could not load your gigs.');
     } finally {
       setLoading(false);
     }
   }, [userId]);
+
+  function focusNewGigForm() {
+    cancelEdit();
+    const titleInput = document.getElementById('title');
+    if (titleInput) {
+      titleInput.focus();
+      titleInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
 
   useEffect(() => {
     if (isAuthenticated && role === 'freelancer') {
@@ -249,30 +261,48 @@ function ManageGigsPage() {
 
         <section className="manage-section" aria-labelledby="my-gigs-heading">
           <h2 id="my-gigs-heading">Your listings</h2>
-          {loading ? <p>Loading…</p> : null}
-          {!loading && myGigs.length === 0 ? <p>You have not published any gigs yet.</p> : null}
-          {!loading && myGigs.length > 0 ? (
-            <ul className="gig-list">
-              {myGigs.map((gig) => (
-                <li key={gig.id} className="manage-gig-row">
-                  <div>
-                    <Link to={`/gigs/${gig.id}`} className="gig-title">
-                      {gig.title}
-                    </Link>
-                    <div className="gig-price">{formatPrice(gig.price)}</div>
-                  </div>
-                  <div className="row-actions">
-                    <button type="button" className="linkish" onClick={() => startEdit(gig)}>
-                      Edit
-                    </button>
-                    <button type="button" className="linkish" onClick={() => handleDelete(gig)}>
-                      Delete
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : null}
+          <LoadingRegion loading={loading} label="Loading your gigs…">
+            <StatusMessage type="error">{listError}</StatusMessage>
+            {listError ? (
+              <p className="home-cta-row">
+                <button type="button" className="primary-action" onClick={loadMine}>
+                  Retry
+                </button>
+              </p>
+            ) : null}
+            {!listError && myGigs.length === 0 ? (
+              <>
+                <p>You have not published any gigs yet.</p>
+                <p className="home-cta-row">
+                  <button type="button" className="primary-action" onClick={focusNewGigForm}>
+                    Publish a gig
+                  </button>
+                </p>
+              </>
+            ) : null}
+            {!listError && myGigs.length > 0 ? (
+              <ul className="gig-list">
+                {myGigs.map((gig) => (
+                  <li key={gig.id} className="manage-gig-row">
+                    <div>
+                      <Link to={`/gigs/${gig.id}`} className="gig-title">
+                        {gig.title}
+                      </Link>
+                      <div className="gig-price">{formatPrice(gig.price)}</div>
+                    </div>
+                    <div className="row-actions">
+                      <button type="button" className="linkish" onClick={() => startEdit(gig)}>
+                        Edit
+                      </button>
+                      <button type="button" className="linkish" onClick={() => handleDelete(gig)}>
+                        Delete
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </LoadingRegion>
         </section>
       </main>
     </>

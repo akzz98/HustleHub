@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, Navigate, useLocation } from 'react-router-dom';
 import { getMyIncome, listGigs, listMyBookings } from '../api/http';
 import { useAuth } from '../auth/AuthContext';
 import { buildLoginPath } from '../auth/authRedirect';
 import AppNav from '../components/AppNav';
+import LoadingRegion from '../components/LoadingRegion';
 import { StatusMessage } from '../components/StatusMessage';
 import { formatBookingStatus } from '../utils/bookingStatus';
 
@@ -20,54 +21,53 @@ function FreelancerDashboardPage() {
   const { isAuthenticated, role } = useAuth();
   const [income, setIncome] = useState(null);
   const [bookings, setBookings] = useState([]);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [incomeError, setIncomeError] = useState('');
+  const [bookingsError, setBookingsError] = useState('');
+  const [incomeLoading, setIncomeLoading] = useState(true);
+  const [bookingsLoading, setBookingsLoading] = useState(true);
+
+  const loadIncome = useCallback(async () => {
+    setIncomeLoading(true);
+    setIncomeError('');
+    try {
+      const incomeData = await getMyIncome();
+      setIncome(incomeData);
+    } catch (err) {
+      setIncome(null);
+      setIncomeError(err.message || 'Could not load income.');
+    } finally {
+      setIncomeLoading(false);
+    }
+  }, []);
+
+  const loadBookings = useCallback(async () => {
+    setBookingsLoading(true);
+    setBookingsError('');
+    try {
+      const [bookingData, gigs] = await Promise.all([listMyBookings(), listGigs()]);
+      const gigById = new Map((Array.isArray(gigs) ? gigs : []).map((gig) => [gig.id, gig]));
+      const enriched = (Array.isArray(bookingData) ? bookingData : []).map((booking) => ({
+        ...booking,
+        gig: gigById.get(booking.gigId) || null,
+      }));
+      setBookings(enriched);
+    } catch (err) {
+      setBookings([]);
+      setBookingsError(err.message || 'Could not load bookings.');
+    } finally {
+      setBookingsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (!isAuthenticated || role !== 'freelancer') {
       return undefined;
     }
 
-    let cancelled = false;
-
-    async function load() {
-      setLoading(true);
-      setError('');
-      try {
-        const [incomeData, bookingData, gigs] = await Promise.all([
-          getMyIncome(),
-          listMyBookings(),
-          listGigs(),
-        ]);
-
-        if (cancelled) {
-          return;
-        }
-
-        const gigById = new Map((Array.isArray(gigs) ? gigs : []).map((gig) => [gig.id, gig]));
-        const enriched = (Array.isArray(bookingData) ? bookingData : []).map((booking) => ({
-          ...booking,
-          gig: gigById.get(booking.gigId) || null,
-        }));
-
-        setIncome(incomeData);
-        setBookings(enriched);
-      } catch (err) {
-        if (!cancelled) {
-          setError(err.message || 'Could not load dashboard.');
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [isAuthenticated, role]);
+    loadIncome();
+    loadBookings();
+    return undefined;
+  }, [isAuthenticated, role, loadIncome, loadBookings]);
 
   if (!isAuthenticated) {
     return (
@@ -102,30 +102,54 @@ function FreelancerDashboardPage() {
           Income from confirmed bookings on your gigs, plus bookings clients have placed with you.
         </p>
 
-        {loading ? <p>Loading…</p> : null}
+        <section className="dashboard-income" aria-labelledby="income-heading">
+          <h2 id="income-heading">Income</h2>
+          <LoadingRegion loading={incomeLoading} label="Loading income…">
+            <StatusMessage type="error">{incomeError}</StatusMessage>
+            {incomeError ? (
+              <p className="home-cta-row">
+                <button type="button" className="primary-action" onClick={loadIncome}>
+                  Retry
+                </button>
+              </p>
+            ) : null}
+            {!incomeError && income ? (
+              <>
+                <p className="income-total">{formatPrice(income.totalIncome)}</p>
+                <p className="hint">
+                  From {income.transactionCount}{' '}
+                  {income.transactionCount === 1 ? 'transaction' : 'transactions'}.
+                </p>
+                <p className="footer-link" style={{ marginTop: '0.75rem' }}>
+                  <Link to="/my-gigs">Manage your gigs</Link>
+                </p>
+              </>
+            ) : null}
+          </LoadingRegion>
+        </section>
 
-        <StatusMessage type="error">{error}</StatusMessage>
-
-        {!loading && income ? (
-          <section className="dashboard-income" aria-labelledby="income-heading">
-            <h2 id="income-heading">Income</h2>
-            <p className="income-total">{formatPrice(income.totalIncome)}</p>
-            <p className="hint">
-              From {income.transactionCount}{' '}
-              {income.transactionCount === 1 ? 'transaction' : 'transactions'}.
-            </p>
-            <p className="footer-link" style={{ marginTop: '0.75rem' }}>
-              <Link to="/my-gigs">Manage your gigs</Link>
-            </p>
-          </section>
-        ) : null}
-
-        {!loading && !error ? (
-          <section className="manage-section" aria-labelledby="bookings-heading">
-            <h2 id="bookings-heading">Bookings on your gigs</h2>
-            {bookings.length === 0 ? (
-              <p>No bookings on your gigs yet.</p>
-            ) : (
+        <section className="manage-section" aria-labelledby="bookings-heading">
+          <h2 id="bookings-heading">Bookings on your gigs</h2>
+          <LoadingRegion loading={bookingsLoading} label="Loading bookings…">
+            <StatusMessage type="error">{bookingsError}</StatusMessage>
+            {bookingsError ? (
+              <p className="home-cta-row">
+                <button type="button" className="primary-action" onClick={loadBookings}>
+                  Retry
+                </button>
+              </p>
+            ) : null}
+            {!bookingsError && bookings.length === 0 ? (
+              <>
+                <p>No bookings on your gigs yet.</p>
+                <p className="home-cta-row">
+                  <Link className="primary-action-link" to="/my-gigs">
+                    Publish a gig
+                  </Link>
+                </p>
+              </>
+            ) : null}
+            {!bookingsError && bookings.length > 0 ? (
               <ul className="gig-list">
                 {bookings.map((booking) => (
                   <li key={booking.id} className="manage-gig-row">
@@ -145,9 +169,9 @@ function FreelancerDashboardPage() {
                   </li>
                 ))}
               </ul>
-            )}
-          </section>
-        ) : null}
+            ) : null}
+          </LoadingRegion>
+        </section>
       </main>
     </>
   );
