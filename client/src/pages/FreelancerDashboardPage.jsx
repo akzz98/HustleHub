@@ -5,6 +5,7 @@ import { useAuth } from '../auth/AuthContext';
 import { buildLoginPath } from '../auth/authRedirect';
 import AppNav from '../components/AppNav';
 import { StatusMessage } from '../components/StatusMessage';
+import { formatBookingStatus } from '../utils/bookingStatus';
 
 function formatPrice(price) {
   return new Intl.NumberFormat(undefined, {
@@ -137,7 +138,7 @@ function FreelancerDashboardPage() {
                         <span className="gig-title">Gig {booking.gigId}</span>
                       )}
                       <div className="hint">
-                        Status: {booking.status}
+                        {formatBookingStatus(booking.status)}
                         {booking.gig ? ` · listed at ${formatPrice(booking.gig.price)}` : ''}
                       </div>
                     </div>

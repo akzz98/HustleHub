@@ -287,6 +287,19 @@ h1 {
   margin-bottom: 0;
 }
 
+.demo-checkout-note {
+  margin: 0 0 1rem;
+}
+
+.booking-confirm {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.booking-confirm p {
+  margin: 0;
+}
+
 .primary-action {
   font: inherit;
   padding: 0.75rem 1rem;

@@ -52,14 +52,25 @@ describe('GigDetailPage interactions', () => {
     });
 
     expect(await screen.findByRole('heading', { name: 'Logo design' })).toBeInTheDocument();
+    expect(
+      screen.getByText(/Checkout is a demo\. No card is charged/i)
+    ).toBeInTheDocument();
+
     await user.click(screen.getByRole('button', { name: /Book for/i }));
+    expect(createBooking).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('button', { name: 'Confirm booking' }));
 
     await waitFor(() => {
       expect(createBooking).toHaveBeenCalledWith('gig-1');
     });
 
-    expect(await screen.findByText(/Payment simulated successfully/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Confirmed — demo payment recorded/i)
+    ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'View my bookings' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Book for/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Confirm booking' })).not.toBeInTheDocument();
   });
 
   test('9.4.15 booking failure shows error alert', async () => {
@@ -74,8 +85,22 @@ describe('GigDetailPage interactions', () => {
 
     expect(await screen.findByRole('heading', { name: 'Logo design' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /Book for/i }));
+    await user.click(screen.getByRole('button', { name: 'Confirm booking' }));
 
     expect(await screen.findByText('Gig not found.')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'View my bookings' })).not.toBeInTheDocument();
+  });
+
+  test('freelancer on own gig sees Edit this gig, not book', async () => {
+    renderWithProviders(null, {
+      route: '/gigs/gig-1',
+      auth: { role: 'freelancer', sub: 'free-1' },
+      routes: <Route path="/gigs/:id" element={<GigDetailPage />} />,
+    });
+
+    expect(await screen.findByRole('heading', { name: 'Logo design' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Edit this gig' })).toHaveAttribute('href', '/my-gigs');
+    expect(screen.queryByRole('button', { name: /Book for/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Only client accounts/i)).not.toBeInTheDocument();
   });
 });

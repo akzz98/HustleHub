@@ -4,6 +4,7 @@ import { createBooking, getGig } from '../api/http';
 import { useAuth } from '../auth/AuthContext';
 import AppNav from '../components/AppNav';
 import { StatusMessage } from '../components/StatusMessage';
+import { formatBookingStatus } from '../utils/bookingStatus';
 
 function formatPrice(price) {
   return new Intl.NumberFormat(undefined, {
@@ -15,13 +16,14 @@ function formatPrice(price) {
 
 function GigDetailPage() {
   const { id } = useParams();
-  const { isAuthenticated, role } = useAuth();
+  const { isAuthenticated, role, userId } = useAuth();
   const [gig, setGig] = useState(null);
   const [error, setError] = useState('');
   const [bookingError, setBookingError] = useState('');
   const [bookingResult, setBookingResult] = useState(null);
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState(false);
+  const [awaitingConfirm, setAwaitingConfirm] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -32,6 +34,7 @@ function GigDetailPage() {
       setGig(null);
       setBookingResult(null);
       setBookingError('');
+      setAwaitingConfirm(false);
       try {
         const data = await getGig(id);
         if (!cancelled) {
@@ -54,20 +57,24 @@ function GigDetailPage() {
     };
   }, [id]);
 
-  async function handleBook() {
+  async function handleConfirmBook() {
     setBookingError('');
-    setBookingResult(null);
     setBooking(true);
 
     try {
       const result = await createBooking(id);
       setBookingResult(result);
+      setAwaitingConfirm(false);
     } catch (err) {
       setBookingError(err.message || 'Could not create booking.');
     } finally {
       setBooking(false);
     }
   }
+
+  const isOwnGig =
+    isAuthenticated && role === 'freelancer' && gig && String(gig.freelancerId) === String(userId);
+  const canBook = isAuthenticated && role === 'client' && !isOwnGig;
 
   return (
     <>
@@ -88,39 +95,82 @@ function GigDetailPage() {
             <p className="lede">{gig.description}</p>
 
             <section className="booking-panel" aria-labelledby="book-heading">
-              <h2 id="book-heading">Book this gig</h2>
+              <h2 id="book-heading">{isOwnGig ? 'Your listing' : 'Book this gig'}</h2>
 
-              {!isAuthenticated ? (
+              {isOwnGig ? (
+                <p className="home-cta-row">
+                  <Link className="primary-action-link" to="/my-gigs">
+                    Edit this gig
+                  </Link>
+                </p>
+              ) : null}
+
+              {!isOwnGig && !isAuthenticated ? (
                 <p>
                   <Link to="/login">Sign in</Link> as a client to book.
                 </p>
               ) : null}
 
-              {isAuthenticated && role !== 'client' ? (
+              {!isOwnGig && isAuthenticated && role !== 'client' ? (
                 <p className="hint">Only client accounts can place bookings.</p>
               ) : null}
 
-              {isAuthenticated && role === 'client' ? (
-                <button type="button" className="primary-action" onClick={handleBook} disabled={booking}>
-                  {booking ? 'Booking…' : `Book for ${formatPrice(gig.price)}`}
-                </button>
+              {canBook && !bookingResult ? (
+                <>
+                  <p className="hint demo-checkout-note">
+                    Checkout is a demo. No card is charged — payment is simulated when you confirm.
+                  </p>
+
+                  {!awaitingConfirm ? (
+                    <button
+                      type="button"
+                      className="primary-action"
+                      onClick={() => {
+                        setBookingError('');
+                        setAwaitingConfirm(true);
+                      }}
+                      disabled={booking}
+                    >
+                      Book for {formatPrice(gig.price)}
+                    </button>
+                  ) : (
+                    <div className="booking-confirm">
+                      <p>
+                        Confirm booking for <strong>{formatPrice(gig.price)}</strong>? This creates
+                        a demo payment record.
+                      </p>
+                      <div className="form-actions">
+                        <button
+                          type="button"
+                          className="primary-action"
+                          onClick={handleConfirmBook}
+                          disabled={booking}
+                        >
+                          {booking ? 'Booking…' : 'Confirm booking'}
+                        </button>
+                        <button
+                          type="button"
+                          className="button-secondary"
+                          onClick={() => setAwaitingConfirm(false)}
+                          disabled={booking}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
               ) : null}
 
               <StatusMessage type="error">{bookingError}</StatusMessage>
 
               {bookingResult ? (
                 <div className="message message-success" role="status">
-                  <p>
-                    Booking <strong>{bookingResult.status}</strong>
-                    {bookingResult.confirmation?.message
-                      ? ` — ${bookingResult.confirmation.message}`
-                      : '.'}
-                  </p>
+                  <p>{formatBookingStatus(bookingResult.status)}</p>
                   {bookingResult.transaction ? (
                     <p>
-                      Simulated payment recorded:{' '}
-                      {formatPrice(bookingResult.transaction.amount)} (transaction{' '}
-                      {bookingResult.transaction.id}).
+                      Simulated payment of {formatPrice(bookingResult.transaction.amount)}{' '}
+                      (transaction {bookingResult.transaction.id}).
                     </p>
                   ) : null}
                   <p>
