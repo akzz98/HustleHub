@@ -47,7 +47,8 @@ Screenshots of the guest, client, and freelancer flows are in [`evidence/hustleh
 | dotenv | Environment config (dotenv, n.d.) |
 | Jest + SuperTest | Backend tests (`mongodb-memory-server`) |
 | Vitest + Testing Library | Frontend tests |
-| Newman | CLI runner for the Postman collection |
+| Postman | Manual API collection (`postman/HustleHub.postman_collection.json`) |
+| Newman | CLI runner for that Postman collection (`npm run test:newman`) |
 
 ## Repository layout
 
@@ -344,8 +345,6 @@ All require Bearer JWT with `role: admin`.
 | GET | `/api/admin/bookings`, `/api/admin/bookings/:id` |
 | GET | `/api/admin/transactions`, `/api/admin/transactions/:id` |
 
-A Postman collection lives at `postman/HustleHub.postman_collection.json`. Import it, disable SSL verification for the local cert, and set `baseUrl` if needed.
-
 ## Testing
 
 ### Backend — Jest + SuperTest
@@ -366,16 +365,44 @@ npm run client:test
 
 Covers auth pages, browse, booking confirm flow, manage gigs, nav, home variants, and admin list/detail smoke tests.
 
-### Postman / Newman
+### Postman (manual API collection)
+
+Collection file: `postman/HustleHub.postman_collection.json`.
+
+1. Start the API (`npm start`) with MongoDB running and TLS certs in place.
+2. Open Postman → **Import** → choose that JSON file.
+3. Turn off **SSL certificate verification** (Settings → General) so the local self-signed cert is accepted.
+4. Set the collection variable `baseUrl` to `https://localhost:3000` (or your `PORT`).
+5. Run the folders in order (or **Run collection**). Auth setup requests save client/freelancer tokens for later folders.
+6. For admin success requests: seed an admin (`npm run seed:admin`), sign in as that admin, copy the JWT into the collection variable `adminToken`. Do not commit tokens.
+
+The collection covers health/CSP, register/login/profile, gigs CRUD and cross-user 403s, bookings + simulated transactions, income, and read-only admin checks.
+
+### Newman (CLI runner for the Postman collection)
+
+Newman is installed as a root `devDependency`. It runs the same collection from the terminal and writes a JSON report under `evidence/`.
+
+Prerequisites: API running on HTTPS, MongoDB up, certs present. Newman uses `-k` so self-signed TLS is accepted.
+
+```powershell
+# Core collection (admin success requests skip if adminToken is unset)
+npm run test:newman
+```
+
+With admin coverage:
 
 ```powershell
 npm run seed:admin
-# Sign in as the seeded admin, then pass the token. Do not commit it.
+# Login as the seeded admin (Postman, curl, or the app), copy the JWT.
 npm run test:newman -- --env-var "adminToken=PASTE_ADMIN_JWT"
 ```
 
-Runs the collection with `-k` (self-signed TLS) and writes `evidence/newman-report.json`. Requires a running API and `MONGODB_URI` available to that process. Without `adminToken`, the admin success requests are skipped. The client-forbidden admin check still runs.
+Output:
 
+- CLI summary (assertions passed/failed)
+- `evidence/newman-report.json` (machine-readable run report)
+
+Without `adminToken`, admin GETs that need a token are skipped; the “client forbidden on admin” check still runs. Do not commit JWTs or paste them into tracked files.
 ### HTTPS manual check
 
 1. Certs in `certs/`, secrets in `.env`.
@@ -408,6 +435,10 @@ OpenSSL (2026) *openssl-req*. Available at: https://docs.openssl.org/master/man1
 OWASP (n.d.) *Transport layer security cheat sheet*. Available at: https://cheatsheetseries.owasp.org/cheatsheets/Transport_Layer_Security_Cheat_Sheet.html (Accessed: 7 September 2026).
 
 OWASP (2021) *Secrets management cheat sheet*. Available at: https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html (Accessed: 7 September 2026).
+
+Newman (n.d.) *newman*. Available at: https://www.npmjs.com/package/newman (Accessed: 12 October 2026).
+
+Postman (n.d.) *Postman API Platform*. Available at: https://www.postman.com/ (Accessed: 12 October 2026).
 
 SuperTest (n.d.) *supertest*. Available at: https://www.npmjs.com/package/supertest (Accessed: 7 September 2026).
 
