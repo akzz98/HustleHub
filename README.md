@@ -25,6 +25,12 @@ Walkthrough video: https://youtu.be/Jca4H9yHYhE
 
 Screenshots of the guest, client, and freelancer flows are in [`evidence/hustlehub-walkthrough.pdf`](evidence/hustlehub-walkthrough.pdf).
 
+Postman and Newman results:
+
+- Postman collection: [`postman/HustleHub.postman_collection.json`](postman/HustleHub.postman_collection.json)
+- Newman CLI summary: [`evidence/newman-cli.txt`](evidence/newman-cli.txt)
+- Newman JSON report: [`evidence/newman-report.json`](evidence/newman-report.json)
+
 ## Intended users
 
 | Role | What they do |
@@ -403,6 +409,9 @@ Output:
 - `evidence/newman-report.json` (machine-readable run report)
 
 Without `adminToken`, admin GETs that need a token are skipped; the “client forbidden on admin” check still runs. Do not commit JWTs or paste them into tracked files.
+
+Saved run output is linked under [Demo](#demo) (`evidence/newman-cli.txt` and `evidence/newman-report.json`).
+
 ### HTTPS manual check
 
 1. Certs in `certs/`, secrets in `.env`.
