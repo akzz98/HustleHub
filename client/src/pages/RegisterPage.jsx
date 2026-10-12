@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { registerUser } from '../api/http';
+import AppNav from '../components/AppNav';
 import { FieldError, StatusMessage } from '../components/StatusMessage';
 import { hasFieldErrors, validateRegistrationForm } from '../utils/formValidation';
 
@@ -58,7 +59,9 @@ function RegisterPage() {
   }
 
   return (
-    <main className="page">
+    <>
+      <AppNav />
+      <main className="page">
       <h1>Create account</h1>
       <p className="lede">
         Register as a client or freelancer. Admin accounts cannot be self-registered.
@@ -163,7 +166,8 @@ function RegisterPage() {
         {' · '}
         <Link to="/">Home</Link>
       </p>
-    </main>
+      </main>
+    </>
   );
 }
 

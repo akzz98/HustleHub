@@ -14,6 +14,7 @@ describe('RegisterPage', () => {
     expect(screen.getByRole('radio', { name: 'Client' })).toBeChecked();
     expect(screen.getByRole('radio', { name: 'Freelancer' })).not.toBeChecked();
     expect(screen.getByRole('button', { name: 'Register' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Sign in' })).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'Sign in' }).length).toBeGreaterThan(0);
+    expect(screen.getByRole('navigation', { name: 'Main' })).toBeInTheDocument();
   });
 });

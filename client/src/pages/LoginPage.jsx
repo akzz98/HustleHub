@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { loginUser } from '../api/http';
 import { useAuth } from '../auth/AuthContext';
+import AppNav from '../components/AppNav';
 import { FieldError, StatusMessage } from '../components/StatusMessage';
 import { hasFieldErrors, validateLoginForm } from '../utils/formValidation';
 
@@ -56,7 +57,9 @@ function LoginPage() {
   }
 
   return (
-    <main className="page">
+    <>
+      <AppNav />
+      <main className="page">
       <h1>Sign in</h1>
       <p className="lede">
         Access token is kept in <code>sessionStorage</code> for this tab only
@@ -110,7 +113,8 @@ function LoginPage() {
         {' · '}
         <Link to="/">Home</Link>
       </p>
-    </main>
+      </main>
+    </>
   );
 }
 
