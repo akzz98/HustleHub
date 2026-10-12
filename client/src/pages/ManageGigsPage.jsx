@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
 import { createGig, deleteGig, listGigs, updateGig } from '../api/http';
 import { useAuth } from '../auth/AuthContext';
+import { buildLoginPath } from '../auth/authRedirect';
 import AppNav from '../components/AppNav';
 import { FieldError, StatusMessage } from '../components/StatusMessage';
 import { hasFieldErrors, validateGigForm } from '../utils/formValidation';
@@ -21,6 +22,7 @@ function formatPrice(price) {
 }
 
 function ManageGigsPage() {
+  const location = useLocation();
   const { isAuthenticated, role, userId } = useAuth();
   const [myGigs, setMyGigs] = useState([]);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -54,7 +56,12 @@ function ManageGigsPage() {
   }, [isAuthenticated, role, loadMine]);
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return (
+      <Navigate
+        to={buildLoginPath({ from: `${location.pathname}${location.search}` })}
+        replace
+      />
+    );
   }
 
   if (role !== 'freelancer') {

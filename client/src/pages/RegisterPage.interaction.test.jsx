@@ -56,10 +56,13 @@ describe('RegisterPage interactions', () => {
       });
     });
 
+    expect(await screen.findByRole('heading', { name: 'Account created' })).toBeInTheDocument();
+    expect(screen.getByText(/Welcome, Ada Lovelace/i)).toBeInTheDocument();
+    const signInLinks = screen.getAllByRole('link', { name: 'Sign in' });
     expect(
-      await screen.findByText(/Account created for Ada Lovelace \(ada@example.com\)/i)
-    ).toBeInTheDocument();
-    expect(screen.getByLabelText(/^Name$/i)).toHaveValue('');
+      signInLinks.some((link) => link.getAttribute('href') === '/login?email=ada%40example.com')
+    ).toBe(true);
+    expect(screen.queryByRole('button', { name: 'Register' })).not.toBeInTheDocument();
   });
 
   test('9.4.4 invalid email shows email field error', async () => {
@@ -116,6 +119,7 @@ describe('RegisterPage interactions', () => {
       });
     });
 
-    expect(await screen.findByText(/Account created for Grace Hopper/i)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Account created' })).toBeInTheDocument();
+    expect(screen.getByText(/Welcome, Grace Hopper/i)).toBeInTheDocument();
   });
 });

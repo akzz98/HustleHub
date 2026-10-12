@@ -1,22 +1,37 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { loginUser } from '../api/http';
 import { useAuth } from '../auth/AuthContext';
+import { defaultPathForRole } from '../auth/authRedirect';
+import { readTokenPayload } from '../auth/tokenStorage';
 import AppNav from '../components/AppNav';
+import PasswordField from '../components/PasswordField';
 import { FieldError, StatusMessage } from '../components/StatusMessage';
 import { hasFieldErrors, validateLoginForm } from '../utils/formValidation';
 
-const INITIAL_FORM = {
-  email: '',
-  password: '',
-};
-
 function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { login } = useAuth();
-  const [form, setForm] = useState(INITIAL_FORM);
+
+  const fromParam = searchParams.get('from');
+  const fromState = location.state?.from;
+  const returnTo =
+    (typeof fromParam === 'string' && fromParam.startsWith('/') && fromParam) ||
+    (typeof fromState === 'string' && fromState.startsWith('/') && fromState) ||
+    null;
+  const reason = searchParams.get('reason');
+  const emailPrefill = searchParams.get('email') || '';
+
+  const [form, setForm] = useState({
+    email: emailPrefill,
+    password: '',
+  });
   const [fieldErrors, setFieldErrors] = useState({});
-  const [error, setError] = useState('');
+  const [error, setError] = useState(
+    reason === 'expired' ? 'Your session expired. Please sign in again.' : ''
+  );
   const [submitting, setSubmitting] = useState(false);
 
   function handleChange(event) {
@@ -48,7 +63,9 @@ function LoginPage() {
     try {
       const { token } = await loginUser(form);
       login(token);
-      navigate('/');
+      const payload = readTokenPayload(token);
+      const destination = returnTo || defaultPathForRole(payload?.role);
+      navigate(destination, { replace: true });
     } catch (err) {
       setError(err.message || 'Login failed.');
     } finally {
@@ -60,58 +77,50 @@ function LoginPage() {
     <>
       <AppNav />
       <main className="page">
-      <h1>Sign in</h1>
-      <p className="lede">
-        Sign in to browse, book, or manage gigs. You stay signed in on this tab until you close it
-        or sign out.
-      </p>
+        <h1>Sign in</h1>
+        <p className="lede">
+          Sign in to browse, book, or manage gigs. You stay signed in on this tab until you close it
+          or sign out.
+        </p>
 
-      <form className="form" onSubmit={handleSubmit} noValidate>
-        <label htmlFor="email">
-          Email
-          <input
-            id="email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-            aria-invalid={Boolean(fieldErrors.email)}
-            aria-describedby={fieldErrors.email ? 'email-error' : undefined}
-            value={form.email}
-            onChange={handleChange}
-          />
-          <FieldError id="email-error" message={fieldErrors.email} />
-        </label>
+        <form className="form" onSubmit={handleSubmit} noValidate>
+          <label htmlFor="email">
+            Email
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              aria-invalid={Boolean(fieldErrors.email)}
+              aria-describedby={fieldErrors.email ? 'email-error' : undefined}
+              value={form.email}
+              onChange={handleChange}
+            />
+            <FieldError id="email-error" message={fieldErrors.email} />
+          </label>
 
-        <label htmlFor="password">
-          Password
-          <input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            maxLength={128}
-            required
-            aria-invalid={Boolean(fieldErrors.password)}
-            aria-describedby={fieldErrors.password ? 'password-error' : undefined}
+          <PasswordField
             value={form.password}
             onChange={handleChange}
+            autoComplete="current-password"
+            invalid={Boolean(fieldErrors.password)}
+            errorId={fieldErrors.password ? 'password-error' : undefined}
+            errorMessage={fieldErrors.password}
           />
-          <FieldError id="password-error" message={fieldErrors.password} />
-        </label>
 
-        <StatusMessage type="error">{error}</StatusMessage>
+          <StatusMessage type="error">{error}</StatusMessage>
 
-        <button type="submit" disabled={submitting}>
-          {submitting ? 'Signing in…' : 'Sign in'}
-        </button>
-      </form>
+          <button type="submit" disabled={submitting}>
+            {submitting ? 'Signing in…' : 'Sign in'}
+          </button>
+        </form>
 
-      <p className="footer-link">
-        No account? <Link to="/register">Register</Link>
-        {' · '}
-        <Link to="/">Home</Link>
-      </p>
+        <p className="footer-link">
+          No account? <Link to="/register">Register</Link>
+          {' · '}
+          <Link to="/">Home</Link>
+        </p>
       </main>
     </>
   );

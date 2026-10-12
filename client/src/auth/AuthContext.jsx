@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { setUnauthorizedHandler } from '../api/http';
+import { redirectToLogin } from './authRedirect';
 import {
   clearToken,
   getToken,
@@ -35,11 +36,13 @@ function AuthProvider({ children }) {
     setSession(buildSession(null));
   }, []);
 
-  // Clear a dead JWT from sessionStorage when a protected API call returns 401.
+  // Clear a dead JWT and send the person back to Sign in with where they were.
   useEffect(() => {
     setUnauthorizedHandler(() => {
+      const from = `${window.location.pathname}${window.location.search}`;
       clearToken();
       setSession(buildSession(null));
+      redirectToLogin({ from, reason: 'expired' });
     });
     return () => setUnauthorizedHandler(null);
   }, []);

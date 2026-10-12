@@ -39,7 +39,7 @@ describe('LoginPage interactions', () => {
     renderWithProviders(<LoginPage />, { route: '/login' });
 
     await user.type(screen.getByLabelText(/^Email$/i), 'ada@example.com');
-    await user.type(screen.getByLabelText(/^Password$/i), 'WrongPassword123!');
+    await user.type(screen.getByLabelText(/Password/i), 'WrongPassword123!');
     await user.click(screen.getByRole('button', { name: 'Sign in' }));
 
     expect(await screen.findByText('Invalid email or password.')).toBeInTheDocument();
@@ -56,20 +56,21 @@ describe('LoginPage interactions', () => {
       routes: (
         <>
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/" element={<h1>Home landed</h1>} />
+          <Route path="/gigs" element={<h1>Browse landed</h1>} />
+          <Route path="/dashboard" element={<h1>Dashboard landed</h1>} />
         </>
       ),
     });
 
     await user.type(screen.getByLabelText(/^Email$/i), 'ada@example.com');
-    await user.type(screen.getByLabelText(/^Password$/i), 'SecurePassword123!');
+    await user.type(screen.getByLabelText(/Password/i), 'SecurePassword123!');
     await user.click(screen.getByRole('button', { name: 'Sign in' }));
 
     await waitFor(() => {
       expect(loginUser).toHaveBeenCalled();
     });
 
-    expect(await screen.findByRole('heading', { name: 'Home landed' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Browse landed' })).toBeInTheDocument();
     expect(getToken()).toBe(token);
   });
 });

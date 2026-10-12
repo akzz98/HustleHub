@@ -11,6 +11,10 @@ describe('RegisterPage', () => {
     expect(screen.getByLabelText(/^Name$/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^Email$/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Password/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Show password/i })).toBeInTheDocument();
+    expect(
+      screen.getByText(/Clients browse and book gigs\. Freelancers publish gigs/i)
+    ).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: 'Client' })).toBeChecked();
     expect(screen.getByRole('radio', { name: 'Freelancer' })).not.toBeChecked();
     expect(screen.getByRole('button', { name: 'Register' })).toBeInTheDocument();

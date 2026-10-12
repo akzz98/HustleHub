@@ -89,6 +89,38 @@ h1 {
   font-size: 0.95rem;
 }
 
+.password-input-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.password-toggle {
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #b8aea2;
+  background: #fffdf9;
+  color: #1a1a1a;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.role-paths {
+  margin: 0 0 0.5rem;
+}
+
+.primary-action-link {
+  display: inline-block;
+  font: inherit;
+  padding: 0.75rem 1rem;
+  border: 1px solid #1a1a1a;
+  background: #1a1a1a;
+  color: #f7f3ee;
+  text-decoration: none;
+}
+
 .form input[type='text'],
 .form input[type='email'],
 .form input[type='password'],

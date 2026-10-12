@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
+import AuthRedirectBridge from './components/AuthRedirectBridge';
 import FreelancerDashboardPage from './pages/FreelancerDashboardPage';
 import GigDetailPage from './pages/GigDetailPage';
 import GigsPage from './pages/GigsPage';
@@ -13,6 +14,7 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <AuthRedirectBridge />
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/register" element={<RegisterPage />} />

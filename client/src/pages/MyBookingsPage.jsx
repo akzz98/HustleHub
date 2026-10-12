@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
 import { listGigs, listMyBookings } from '../api/http';
 import { useAuth } from '../auth/AuthContext';
+import { buildLoginPath } from '../auth/authRedirect';
 import AppNav from '../components/AppNav';
 import { StatusMessage } from '../components/StatusMessage';
 
@@ -14,6 +15,7 @@ function formatPrice(price) {
 }
 
 function MyBookingsPage() {
+  const location = useLocation();
   const { isAuthenticated, role } = useAuth();
   const [rows, setRows] = useState([]);
   const [error, setError] = useState('');
@@ -59,7 +61,12 @@ function MyBookingsPage() {
   }, [isAuthenticated, role]);
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return (
+      <Navigate
+        to={buildLoginPath({ from: `${location.pathname}${location.search}` })}
+        replace
+      />
+    );
   }
 
   if (role !== 'client') {
