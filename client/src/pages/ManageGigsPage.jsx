@@ -170,8 +170,7 @@ function ManageGigsPage() {
       <main className="page page-wide">
         <h1>Manage your gigs</h1>
         <p className="lede">
-          Create, update, or remove listings you own. Ownership is taken from your JWT — not from
-          the form.
+          Create, update, or remove the gigs you publish. Only your own listings appear here.
         </p>
 
         <form className="form" onSubmit={handleSubmit} noValidate>

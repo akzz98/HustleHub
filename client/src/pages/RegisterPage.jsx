@@ -64,7 +64,8 @@ function RegisterPage() {
       <main className="page">
       <h1>Create account</h1>
       <p className="lede">
-        Register as a client or freelancer. Admin accounts cannot be self-registered.
+        Create an account to get started. Choose whether you want to hire freelancers or offer your own
+        services.
       </p>
 
       <form className="form" onSubmit={handleSubmit} noValidate>
