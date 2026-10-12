@@ -62,9 +62,8 @@ function LoginPage() {
       <main className="page">
       <h1>Sign in</h1>
       <p className="lede">
-        Access token is kept in <code>sessionStorage</code> for this tab only
-        (cleared when the tab closes). See <code>src/auth/tokenStorage.js</code>{' '}
-        for the storage tradeoffs.
+        Sign in to browse, book, or manage gigs. You stay signed in on this tab until you close it
+        or sign out.
       </p>
 
       <form className="form" onSubmit={handleSubmit} noValidate>
