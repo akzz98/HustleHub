@@ -19,6 +19,12 @@ The API runs on Node.js and Express over HTTPS (Express, 2026; Node.js, 2026). P
 - Profile name in the nav after sign-in (`GET /api/profile`)
 - Loading, Retry, empty-state next steps, skip link, document titles, focus rings
 
+## Demo
+
+Walkthrough video: https://youtu.be/Jca4H9yHYhE
+
+Screenshots of the guest, client, and freelancer flows are in [`evidence/hustlehub-walkthrough.pdf`](evidence/hustlehub-walkthrough.pdf).
+
 ## Intended users
 
 | Role | What they do |
@@ -59,7 +65,7 @@ src/scripts/seedAdmin.js   development-only admin seed
 client/                    React + Vite SPA
 postman/                   Postman collection
 tests/                     Jest + SuperTest
-evidence/                  Newman JSON report output
+evidence/                  Walkthrough PDF, Newman report, and test logs
 .env.example               placeholder variable names, not live secrets
 certs/                     local TLS files (gitignored)
 ```
