@@ -2,8 +2,17 @@ const { prepareRegistrationInput, prepareLoginInput } = require('../utils/valida
 const userService = require('../services/userService');
 const tokenService = require('../services/tokenService');
 const loginLockout = require('../services/loginLockout');
+const { logger } = require('../utils/logger');
 
 const GENERIC_LOGIN_ERROR = 'Invalid email or password.';
+
+function logLoginFailure(email, reason, lockState) {
+  logger.warn({ event: 'login_failure', email, reason }, 'login failed');
+
+  if (lockState.locked) {
+    logger.warn({ event: 'login_lockout', email }, 'login lockout active');
+  }
+}
 
 async function register(req, res, next) {
   try {
@@ -41,25 +50,33 @@ async function login(req, res, next) {
 
     // Locked emails get the same generic 401 — no hint that the account exists or is locked.
     if (loginLockout.isLocked(email)) {
+      logger.warn({ event: 'login_lockout', email }, 'login rejected — account locked');
       return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
     }
 
     const user = await userService.findByEmail(email);
 
     if (!user) {
-      loginLockout.recordFailure(email);
+      const lockState = loginLockout.recordFailure(email);
+      logLoginFailure(email, 'unknown_email', lockState);
       return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
     }
 
     const passwordMatches = userService.comparePassword(password, user.passwordHash);
 
     if (!passwordMatches) {
-      loginLockout.recordFailure(email);
+      const lockState = loginLockout.recordFailure(email);
+      logLoginFailure(email, 'bad_password', lockState);
       return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
     }
 
     loginLockout.clearAttempts(email);
     const token = tokenService.createAccessToken(user.id, user.role);
+
+    logger.info(
+      { event: 'login_success', email, userId: user.id, role: user.role },
+      'login succeeded'
+    );
 
     res.status(200).json(tokenService.toLoginResponse(token)); // still { token } only
   } catch (err) {
