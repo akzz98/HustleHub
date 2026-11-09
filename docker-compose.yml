@@ -38,8 +38,8 @@ services:
       CLIENT_ORIGIN: http://localhost:8080
     volumes:
       - ./certs:/certs:ro
-    ports:
-      - "3000:3000"
+    # API stays on the Compose network (client nginx proxies /api → api:3000).
+    # Publish only if you need direct host access: "3000:3000"
     depends_on:
       mongo:
         condition: service_healthy
