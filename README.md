@@ -218,6 +218,8 @@ flowchart TB
 - **RBAC** — `authenticate` then `requireRole(...)` on protected gig writes, bookings, income, and all `/api/admin/*` routes.
 - **Admin HTTP** — GET only for users, gigs, bookings, transactions. No create/update/delete.
 - **Login failures** — unknown email and wrong password both return 401 `Invalid email or password.`
+- **Account lockout (extra feature)** — after **5** failed logins for the same email (trimmed/lowercased), further attempts are rejected for **15 minutes**. Successful login clears the counter. Locked accounts still get the same generic 401 (no hint that the email exists or is locked). This is **in addition to** the IP auth rate limit. Implementation: `src/services/loginLockout.js`, wired in `authController.login`.
+- **CORS allowlist (extra feature)** — browsers may call the API only from `CLIENT_ORIGIN` (for example `http://localhost:5173` locally, or `http://localhost:8080` under Compose). Any other browser `Origin` receives **403** `Origin not allowed.` Requests with **no** `Origin` (curl, Postman, Vite/nginx proxies, tests) still reach the routes. Outside `NODE_ENV=test`, missing `CLIENT_ORIGIN` fails closed at startup. Implementation: `src/middleware/corsAllowlist.js`.
 - **Helmet** — security headers and Content-Security-Policy before routes.
 - **Rate limiting** — auth routes (register and login share one bucket): **20** requests per 15 minutes per IP. Booking routes (create and list): **30** requests per 15 minutes per IP. Over the limit the API returns **429** `{ error: "Too many requests, please try again later." }`.
 - **HTTPS** — `https.createServer` only. Missing certs or `JWT_SECRET` stops the process (Node.js, 2026; OWASP, n.d.).
@@ -228,7 +230,9 @@ flowchart TB
 |---|---|
 | HTTPS / TLS | `server.js` |
 | Helmet / CSP | `middleware/securityHeaders.js` |
+| CORS allowlist | `middleware/corsAllowlist.js` (`CLIENT_ORIGIN`) |
 | Auth rate limit | auth routes, 20 / 15 min |
+| Account lockout | `services/loginLockout.js` (5 failures / 15 min) |
 | Booking rate limit | booking routes, 30 / 15 min |
 | Validation | `src/utils/validation.js` |
 | bcrypt | user service |
@@ -525,6 +529,27 @@ Saved results:
 ### Dependency audit (related CI gate)
 
 Production API deps and the client also run `npm audit --audit-level=high` in CI. Safe `npm audit fix` updates were applied; remaining API issues sit only under newman/jest (devDependencies) and would need breaking `--force` downgrades — see [`evidence/npm-audit.txt`](evidence/npm-audit.txt).
+
+## Logging and monitoring
+
+The API uses **Pino** (`src/utils/logger.js`) to write **JSON lines to stdout**. Structured fields use an `event` name so operators can filter login, booking, transaction, and error traffic. Redaction replaces passwords, tokens, `Authorization` headers, `JWT_SECRET`, and `MONGODB_URI` with `[Redacted]` if they ever appear on a log object.
+
+| Event | When it is written | Fields logged | Why it matters |
+|---|---|---|---|
+| `login_success` | Successful sign-in | `email`, `userId`, `role` | Shows who authenticated and when |
+| `login_failure` | Wrong password or unknown email | `email`, `reason` | Detects brute-force and credential stuffing |
+| `login_lockout` | Lockout starts, or a locked account is tried | `email` | Confirms lockout is engaging under attack |
+| `booking_created` | Client booking succeeds | booking / gig / client / freelancer ids | Audit trail for marketplace activity |
+| `transaction_created` | Linked demo payment record | transaction / booking ids, parties, `amount` | Ties income and tax totals to bookings |
+| `server_error` | Unexpected 500 path | `errName`, `errMessage`, `method`, `path` | Ops diagnosis without exposing internals to clients |
+
+**Deliberately omitted from logs:** passwords, password hashes, JWTs, `Authorization` values, `JWT_SECRET`, and `MONGODB_URI`. Client error responses stay generic for unexpected failures (no stack traces in the HTTP body).
+
+Sample (redacted) lines: [`evidence/logging-sample.txt`](evidence/logging-sample.txt).
+
+### Optional cloud sink (Better Stack)
+
+When `LOGTAIL_SOURCE_TOKEN` is set, the same JSON stream is also shipped to Better Stack via `@logtail/pino`. Read events in **Better Stack → Logs → Live tail**. Setup notes: [`evidence/cloud-logging.txt`](evidence/cloud-logging.txt). Leave the token blank for stdout-only logging; never commit tokens.
 
 ## Out of scope for Part 2
 
