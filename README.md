@@ -4,19 +4,23 @@ HustleHub+ is a secure freelance marketplace (MERN). This README is the project 
 
 ## System overview
 
-Freelancers publish gigs; clients browse and book them. Bookings create a simulated payment transaction. Freelancers see income on a dashboard. An admin account (development seed only) has read-only oversight of users, gigs, bookings, and transactions.
+Freelancers publish gigs; clients browse and book them. Bookings create a simulated payment transaction. Freelancers see income and an approximate tax estimate on the dashboard. An admin account (development seed only) has read-only oversight of users, gigs, bookings, and transactions.
 
-The API runs on Node.js and Express over HTTPS (Express, 2026; Node.js, 2026). Passwords are bcrypt hashes (bcrypt, n.d.). Authenticated routes use a JWT with `{ sub, role }` (Jones, Bradley and Sakimura, 2015). Data is stored in MongoDB via Mongoose. The React client (Vite) talks to the API through a local `/api` proxy in development.
+The API runs on Node.js and Express over HTTPS (Express, 2026; Node.js, 2026). Passwords are bcrypt hashes (bcrypt, n.d.). Authenticated routes use a JWT with `{ sub, role }` (Jones, Bradley and Sakimura, 2015). Data is stored in MongoDB via Mongoose. The React client (Vite) talks to the API through a local `/api` proxy in development, or through nginx when using Docker Compose. GitHub Actions runs tests, static analysis, image builds, and a live Compose check on every push and pull request.
 
 ## Features
 
 - Register as **client** or **freelancer** (public registration cannot create `admin`)
 - Sign in with JWT stored in `sessionStorage` for the browser tab
+- Account lockout after five failed logins (15 minutes) plus IP rate limits
+- CORS allowlist via `CLIENT_ORIGIN`
 - Public gig catalog with search, sort, and excerpts
-- Freelancer: create / edit / delete own gigs; dashboard income, tax estimate, and incoming bookings
+- Freelancer: create / edit / delete own gigs; dashboard income, tax estimate (chart), and incoming bookings
 - Client: book a gig (demo checkout — no card charged); view My bookings
 - Admin (seeded): read-only Users, Gigs, Bookings, Transactions screens
 - Profile name in the nav after sign-in (`GET /api/profile`)
+- Structured JSON logging (login, booking, transaction, errors) with optional Better Stack shipping
+- Docker Compose stack (MongoDB + API + client) and CI/CD pipeline
 - Loading, Retry, empty-state next steps, skip link, document titles, focus rings
 
 ## Tax estimation
@@ -43,22 +47,26 @@ Implementation: `src/utils/taxEstimate.js`, attached by the income service. Resp
 
 ## Demo
 
-Walkthrough video: https://youtu.be/Jca4H9yHYhE
+Walkthrough video (marketplace flow): https://youtu.be/Jca4H9yHYhE
+
+A final demonstration that also shows the freelancer income/tax dashboard will be linked here when recorded (submission evidence step).
 
 Screenshots of the guest, client, and freelancer flows are in [`evidence/hustlehub-walkthrough.pdf`](evidence/hustlehub-walkthrough.pdf).
 
-Postman and Newman results:
+API and pipeline evidence:
 
 - Postman collection: [`postman/HustleHub.postman_collection.json`](postman/HustleHub.postman_collection.json)
 - Newman CLI summary: [`evidence/newman-cli.txt`](evidence/newman-cli.txt)
 - Newman JSON report: [`evidence/newman-report.json`](evidence/newman-report.json)
+- CI success / failure notes: [`evidence/ci-successful-run.txt`](evidence/ci-successful-run.txt), [`evidence/ci-failed-run.txt`](evidence/ci-failed-run.txt)
+- Semgrep / logging / Docker notes under [`evidence/`](evidence/)
 
 ## Intended users
 
 | Role | What they do |
 |---|---|
 | Client | Browse and book gigs; see My bookings |
-| Freelancer | Publish and manage gigs; see dashboard income and bookings |
+| Freelancer | Publish and manage gigs; see dashboard income, tax estimate, and bookings |
 | Admin | Read-only oversight (no create/edit/delete in the UI or admin HTTP API) |
 
 ## Technology
@@ -72,9 +80,13 @@ Postman and Newman results:
 | jsonwebtoken | JWT HS256 sign/verify (Jones, Bradley and Sakimura, 2015) |
 | Helmet | Security headers and CSP |
 | express-rate-limit | Auth and booking rate limiting |
+| Pino (+ optional `@logtail/pino`) | JSON logging / Better Stack shipping |
+| Docker + Compose | Containerised MongoDB, API, and client |
+| GitHub Actions | CI: tests, audit, Semgrep, images, Compose live check |
 | dotenv | Environment config (dotenv, n.d.) |
 | Jest + SuperTest | Backend tests (`mongodb-memory-server`) |
 | Vitest + Testing Library | Frontend tests |
+| Semgrep / oxlint | Static analysis in CI |
 | Postman | Manual API collection (`postman/HustleHub.postman_collection.json`) |
 | Newman | CLI runner for that Postman collection (`npm run test:newman`) |
 
@@ -87,14 +99,19 @@ src/config/db.js           Mongoose connection helper
 src/models/                User, Gig, Booking, Transaction
 src/routes/                auth, profile, gigs, bookings, income, admin
 src/controllers/           HTTP in/out
-src/services/              business rules, public shapes
+src/services/              business rules, public shapes, login lockout
 src/repositories/          MongoDB access (`_id` → public `id`)
-src/middleware/            JWT auth, requireRole, Helmet, rate limit, errors
+src/middleware/            JWT auth, requireRole, Helmet, CORS, rate limit, errors
+src/utils/                 validation, sanitise, taxEstimate, logger, SSL helpers
 src/scripts/seedAdmin.js   development-only admin seed
-client/                    React + Vite SPA
+client/                    React + Vite SPA (+ Dockerfile, nginx.conf)
+Dockerfile                 API image
+docker-compose.yml         mongo + api + client
+docker-compose.ci.yml      CI override (publishes API port)
+.github/workflows/ci.yml   GitHub Actions pipeline
 postman/                   Postman collection
 tests/                     Jest + SuperTest
-evidence/                  Walkthrough PDF, Newman report, and test logs
+evidence/                  Walkthrough, Newman, CI, Semgrep, logging, Docker notes
 .env.example               placeholder variable names, not live secrets
 certs/                     local TLS files (gitignored)
 ```
@@ -240,6 +257,55 @@ flowchart TB
 | RBAC | `requireRole` |
 | Admin read-only | `routes/adminRoutes.js` |
 | Controlled errors | `middleware/errorHandler.js` |
+
+## Security review
+
+Final mapping of common threats to controls that exist in this repository:
+
+### Injection
+
+Threat: attackers send crafted input to change queries or commands (for example NoSQL/operator injection or string-built filters).
+
+Controls in this project:
+
+- Request bodies are validated and sanitised in `src/utils/validation.js` / `src/utils/sanitise.js` before business logic runs
+- Persistence goes through Mongoose models and repositories; public ids map from MongoDB `_id` — routes do not build raw query strings from client text
+- Booking amounts come from the gig price at booking time, not from a client-supplied payment field
+
+### Cross-site scripting (XSS)
+
+Threat: malicious script runs in another user’s browser via stored or reflected content.
+
+Controls in this project:
+
+- The React client renders user-facing text as React children/text nodes by default (not `dangerouslySetInnerHTML`)
+- Helmet sets a restrictive Content-Security-Policy on API responses (`middleware/securityHeaders.js`), limiting script/style sources to `'self'`
+- Gig and profile fields are length-limited and sanitised on write
+
+### Authentication weaknesses
+
+Threat: credential stuffing, password theft, weak session handling, or secret leakage.
+
+Controls in this project:
+
+- Passwords stored only as bcrypt hashes (cost 10); never returned in API JSON
+- `JWT_SECRET` is required at startup; missing secret stops the process
+- Login failures (unknown email, wrong password, locked account) share one generic 401 message
+- Auth IP rate limiting (20 / 15 minutes) plus per-email lockout (5 failures / 15 minutes)
+- API serves HTTPS only; TLS materials come from the environment
+- Frontend keeps the JWT in `sessionStorage` for the tab lifetime
+
+### Access control
+
+Threat: privilege escalation, cross-user data access, or browser calls from untrusted sites.
+
+Controls in this project:
+
+- JWT carries `{ sub, role }`; `authenticate` then `requireRole(...)` gate protected routes
+- Gig update/delete and booking visibility enforce ownership (freelancer/client) — cross-user attempts return 403
+- Public registration cannot create `admin`; admin is seeded only in development
+- Admin HTTP API is read-only (GET lists/details only)
+- CORS allowlist accepts browser calls only from `CLIENT_ORIGIN`
 
 ## Installation
 
@@ -399,7 +465,7 @@ Base URL: `https://localhost:3000`. Examples use `curl.exe -k`.
 |---|---|---|
 | POST | `/api/bookings` | Client — body `{ gigId }`; creates booking + simulated transaction |
 | GET | `/api/bookings` | Client: own bookings; freelancer: bookings on own gigs |
-| GET | `/api/income/me` | Freelancer — `{ totalIncome, transactionCount }` |
+| GET | `/api/income/me` | Freelancer — `{ freelancerId, totalIncome, transactionCount, estimatedTax, netAfterTax, effectiveRate }` |
 
 ### Admin (read-only)
 
@@ -422,7 +488,7 @@ Tests import `app.js` and use `mongodb-memory-server`. They do not start HTTPS (
 npm test
 ```
 
-Covers auth, roles, gigs, bookings, income, admin read-only access, validation, and security-related responses.
+Covers auth, roles, gigs, bookings, income/tax fields, login lockout, CORS allowlist, logging hooks, admin read-only access, validation, and security-related responses.
 
 ### Frontend — Vitest + Testing Library
 
@@ -430,7 +496,7 @@ Covers auth, roles, gigs, bookings, income, admin read-only access, validation, 
 npm run client:test
 ```
 
-Covers auth pages, browse, booking confirm flow, manage gigs, nav, home variants, and admin list/detail smoke tests.
+Covers auth pages, browse, booking confirm flow, manage gigs, nav, home variants, freelancer tax/income dashboard rendering, and admin list/detail smoke tests.
 
 ### Postman (manual API collection)
 
