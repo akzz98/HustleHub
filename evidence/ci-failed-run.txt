@@ -1,0 +1,24 @@
+HustleHub+ CI — deliberate failure evidence
+==========================================
+
+Purpose
+-------
+Confirm that GitHub Actions fails when a backend test does not pass.
+
+Broken commit
+-------------
+- Branch: POE
+- Commit: ffedea26332c1db56d9868ad1b9c69eae055035f
+- Message: test: add deliberate failing probe to verify CI failure
+- Change: temporary expect(true).toBe(false) in tests/taxEstimate.test.js
+
+Failed Actions run
+------------------
+https://github.com/akzz98/HustleHub/actions/runs/42634298478
+
+Result: conclusion=failure (Backend job / Jest)
+
+Restore
+-------
+The deliberate failing probe was removed in the following commit so the suite
+is green again. Keep this file as evidence that a failing check turns CI red.
