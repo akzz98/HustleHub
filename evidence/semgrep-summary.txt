@@ -27,4 +27,9 @@ Fixes applied
 No Semgrep security findings required code changes.
 No unresolved security issues remain from these static-analysis tools.
 
+CI re-run (matches saved zero-finding evidence)
+-----------------------------------------------
+https://github.com/akzz98/HustleHub/actions/runs/42636298605
+Jobs: Backend success, Frontend success (incl. oxlint), Semgrep success
+
 Captured: 2026-11-09
