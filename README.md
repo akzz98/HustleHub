@@ -243,8 +243,9 @@ flowchart TB
 
 - Node.js (API uses CommonJS; client uses ES modules)
 - npm
-- MongoDB reachable at `MONGODB_URI`
+- MongoDB reachable at `MONGODB_URI` (local install, or via Docker Compose below)
 - OpenSSL or [mkcert](https://github.com/FiloSottile/mkcert) for local TLS (OpenSSL, 2026; Valsorda, n.d.)
+- Docker Desktop (optional — only needed for `docker compose up --build`)
 
 ### Setup
 
@@ -266,12 +267,13 @@ JWT_EXPIRES_IN=1h
 MONGODB_URI=mongodb://127.0.0.1:27017/hustlehub
 SSL_KEY_PATH=certs/localhost-key.pem
 SSL_CERT_PATH=certs/localhost.pem
+CLIENT_ORIGIN=http://localhost:5173
 ADMIN_SEED_NAME=Local Admin
 ADMIN_SEED_EMAIL=admin@example.com
 ADMIN_SEED_PASSWORD=put-a-strong-password-here
 ```
 
-Do not commit `.env`.
+`CLIENT_ORIGIN` is the browser origin allowed to call the API (Vite default `http://localhost:5173`). For the Compose UI use `http://localhost:8080`. Do not commit `.env`.
 
 ### Local SSL certificate
 
@@ -322,6 +324,39 @@ Opens Vite on `http://localhost:5173`. Browser calls go to `/api/...` and are pr
 npm run client:build
 npm run client:preview
 ```
+
+### Run tests (local)
+
+With dependencies installed:
+
+```powershell
+npm test                 # backend Jest (uses mongodb-memory-server)
+npm run client:test      # frontend Vitest
+npm run test:newman      # Postman collection via Newman (API must be running)
+```
+
+See [Testing](#testing) for Postman setup and what each suite covers.
+
+### Docker Compose (full stack)
+
+Runs MongoDB, the API, and the nginx client together. Prerequisites: Docker Desktop, a `.env` with at least `JWT_SECRET`, and TLS files under `certs/` (same Local SSL steps as above).
+
+```powershell
+docker compose up --build
+```
+
+| URL | What |
+|---|---|
+| http://localhost:8080 | Client UI (nginx) |
+| http://localhost:8080/api/... | Proxied to the API container |
+
+The API listens on `https://api:3000` inside the Compose network and is not published on the host by default. Compose sets `MONGODB_URI=mongodb://mongo:27017/hustlehub` and `CLIENT_ORIGIN=http://localhost:8080` for the API service.
+
+```powershell
+docker compose down
+```
+
+CI also exercises this stack (with `docker-compose.ci.yml` publishing API port 3000 for direct health checks). Notes: [`evidence/docker-run.txt`](evidence/docker-run.txt).
 
 ## API endpoints
 
@@ -441,9 +476,59 @@ Saved run output is linked under [Demo](#demo) (`evidence/newman-cli.txt` and `e
 3. `curl.exe -k https://localhost:3000/` → **200** `{"status":"ok"}`
 4. Confirm missing certs do not fall back to HTTP (process exits).
 
+## CI/CD pipeline
+
+Workflow file: [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+
+Runs automatically on every **push** and **pull request**. If any job or check fails, the workflow fails (the GitHub check goes red).
+
+| Job | What it runs |
+|---|---|
+| **Backend** | `npm ci` → `npm audit --omit=dev --audit-level=high` → `npm test` (Jest) → load `src/app` |
+| **Frontend** | `npm ci` in `client/` → `npm audit --audit-level=high` → `npm run lint` (oxlint) → Vitest → `npm run build` |
+| **Semgrep** | `semgrep scan --config p/javascript --config p/nodejs` (fails on findings) |
+| **Docker images** | `docker build` for the API image and the client image |
+| **Docker Compose** | Generate CI certs/`.env`, `docker compose up --build`, live-check client (`http://localhost:8080/`) and API (`https://localhost:3000/` and `/api/gigs`), then tear down |
+
+Evidence:
+
+- Successful run: [`evidence/ci-successful-run.txt`](evidence/ci-successful-run.txt)
+- Deliberate test failure (workflow went red): [`evidence/ci-failed-run.txt`](evidence/ci-failed-run.txt)
+- Deliberate Compose check failure: [`evidence/compose-failed-run.txt`](evidence/compose-failed-run.txt)
+
+## Static analysis
+
+Two tools run in CI and are saved under `evidence/` for submission.
+
+### Semgrep
+
+- Rulesets: `p/javascript` and `p/nodejs` (Community Edition registry packs)
+- Command (also in the Semgrep CI job): `semgrep scan --config p/javascript --config p/nodejs`
+- The job uses `--error`, so any finding fails the workflow
+
+Saved results:
+
+| File | Contents |
+|---|---|
+| [`evidence/semgrep-results.json`](evidence/semgrep-results.json) | Machine-readable scan output |
+| [`evidence/semgrep-cli.txt`](evidence/semgrep-cli.txt) | Human-readable summary |
+| [`evidence/semgrep-summary.txt`](evidence/semgrep-summary.txt) | Interpretation and CI link |
+
+**What the results indicate:** the saved scan reports **0 findings** (0 blocking) across 68 rules and 91 targets. No Semgrep security issues needed code changes, and no unresolved Semgrep findings remain.
+
+### oxlint (client)
+
+- Runs in the Frontend job as `npm run lint`
+- Exit code **0** — the script does not fail the build
+- Remaining messages are React Fast Refresh / `set-state-in-effect` warnings in existing UI helpers and pages. They are style/React guidance, not security findings, and were left as non-blocking warnings
+
+### Dependency audit (related CI gate)
+
+Production API deps and the client also run `npm audit --audit-level=high` in CI. Safe `npm audit fix` updates were applied; remaining API issues sit only under newman/jest (devDependencies) and would need breaking `--force` downgrades — see [`evidence/npm-audit.txt`](evidence/npm-audit.txt).
+
 ## Out of scope for Part 2
 
-Tax estimation, CI/CD, Docker, monitoring dashboards, OAuth, refresh tokens, email verification, password reset, and admin create/update/delete of marketplace data.
+OAuth, refresh tokens, email verification, password reset, and admin create/update/delete of marketplace data. (Tax estimation, CI/CD, Docker, and logging are covered in this final POE version.)
 
 ## References
 
