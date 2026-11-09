@@ -1,5 +1,5 @@
 // In-memory failed-login tracking keyed by normalised email.
-// STEP 2.1: storage and rules only — login wiring is STEP 2.2.
+// Used by authController.login.
 //
 // Locked rules:
 //   - 5 failed attempts for one email → lock for 15 minutes

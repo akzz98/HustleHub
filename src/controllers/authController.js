@@ -1,6 +1,9 @@
 const { prepareRegistrationInput, prepareLoginInput } = require('../utils/validation');
 const userService = require('../services/userService');
 const tokenService = require('../services/tokenService');
+const loginLockout = require('../services/loginLockout');
+
+const GENERIC_LOGIN_ERROR = 'Invalid email or password.';
 
 async function register(req, res, next) {
   try {
@@ -35,19 +38,27 @@ async function login(req, res, next) {
     }
 
     const { email, password } = prepared.value;
+
+    // Locked emails get the same generic 401 — no hint that the account exists or is locked.
+    if (loginLockout.isLocked(email)) {
+      return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
+    }
+
     const user = await userService.findByEmail(email);
 
     if (!user) {
-      // same message as a wrong password — don't leak whether the email exists
-      return res.status(401).json({ error: 'Invalid email or password.' });
+      loginLockout.recordFailure(email);
+      return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
     }
 
     const passwordMatches = userService.comparePassword(password, user.passwordHash);
 
     if (!passwordMatches) {
-      return res.status(401).json({ error: 'Invalid email or password.' });
+      loginLockout.recordFailure(email);
+      return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
     }
 
+    loginLockout.clearAttempts(email);
     const token = tokenService.createAccessToken(user.id, user.role);
 
     res.status(200).json(tokenService.toLoginResponse(token)); // still { token } only

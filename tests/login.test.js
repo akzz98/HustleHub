@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const request = require('supertest');
 const app = require('../src/app'); // Express app, not the HTTPS server
+const { MAX_FAILED_ATTEMPTS } = require('../src/services/loginLockout');
 
 const validUser = {
   name: 'John Smith',
@@ -102,5 +103,81 @@ describe('POST /api/auth/login', () => {
 
     expect(response.status).toBe(400);
     expect(response.body.error).toBe('Password must be at most 128 characters.');
+  });
+});
+
+describe('POST /api/auth/login lockout', () => {
+  const lockoutUser = {
+    name: 'Lockout User',
+    email: 'lockout-login@example.com',
+    password: 'SecurePassword123!',
+    role: 'client',
+  };
+
+  async function registerLockoutUser() {
+    await request(app).post('/api/auth/register').send(lockoutUser);
+  }
+
+  async function failLogin() {
+    return request(app)
+      .post('/api/auth/login')
+      .send({ email: lockoutUser.email, password: 'WrongPassword123!' });
+  }
+
+  test('locks after five failed attempts with the same generic 401', async () => {
+    await registerLockoutUser();
+
+    for (let i = 0; i < MAX_FAILED_ATTEMPTS; i += 1) {
+      const failed = await failLogin();
+      expect(failed.status).toBe(401);
+      expect(failed.body.error).toBe('Invalid email or password.');
+    }
+
+    const locked = await failLogin();
+    expect(locked.status).toBe(401);
+    expect(locked.body.error).toBe('Invalid email or password.');
+  });
+
+  test('rejects a correct password while the email is locked', async () => {
+    await registerLockoutUser();
+
+    for (let i = 0; i < MAX_FAILED_ATTEMPTS; i += 1) {
+      await failLogin();
+    }
+
+    const response = await request(app)
+      .post('/api/auth/login')
+      .send({ email: lockoutUser.email, password: lockoutUser.password });
+
+    expect(response.status).toBe(401);
+    expect(response.body.error).toBe('Invalid email or password.');
+    expect(response.body.token).toBeUndefined();
+  });
+
+  test('successful login clears the failed-attempt counter', async () => {
+    await registerLockoutUser();
+
+    for (let i = 0; i < MAX_FAILED_ATTEMPTS - 1; i += 1) {
+      await failLogin();
+    }
+
+    const success = await request(app)
+      .post('/api/auth/login')
+      .send({ email: lockoutUser.email, password: lockoutUser.password });
+
+    expect(success.status).toBe(200);
+    expect(success.body.token).toEqual(expect.any(String));
+
+    for (let i = 0; i < MAX_FAILED_ATTEMPTS - 1; i += 1) {
+      const failed = await failLogin();
+      expect(failed.status).toBe(401);
+    }
+
+    const stillOpen = await request(app)
+      .post('/api/auth/login')
+      .send({ email: lockoutUser.email, password: lockoutUser.password });
+
+    expect(stillOpen.status).toBe(200);
+    expect(stillOpen.body.token).toEqual(expect.any(String));
   });
 });

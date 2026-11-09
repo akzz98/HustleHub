@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { connectDatabase } = require('../src/config/db');
+const loginLockout = require('../src/services/loginLockout');
 
 beforeAll(async () => {
   if (mongoose.connection.readyState === 0) {
@@ -8,6 +9,8 @@ beforeAll(async () => {
 });
 
 afterEach(async () => {
+  loginLockout.clearAll();
+
   if (mongoose.connection.readyState !== 1) {
     return;
   }
