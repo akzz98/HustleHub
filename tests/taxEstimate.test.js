@@ -14,6 +14,11 @@ describe('estimateTax', () => {
     });
   });
 
+  // Temporary deliberate failure to prove CI goes red — remove after the failed run.
+  test('deliberate CI failure probe', () => {
+    expect(true).toBe(false);
+  });
+
   test('worked example: income 20000 → tax 1800', () => {
     expect(estimateTax(20000)).toEqual({
       estimatedTax: 1800,
