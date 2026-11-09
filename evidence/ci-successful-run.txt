@@ -1,0 +1,22 @@
+HustleHub+ CI — successful run evidence
+======================================
+
+Purpose
+-------
+Record a green GitHub Actions run after backend tests, API module load, and
+frontend test/build all passed.
+
+Successful Actions run
+----------------------
+https://github.com/akzz98/HustleHub/actions/runs/42634488444
+
+Details
+-------
+- Branch: POE
+- Commit: 476dbff364acb14dfa864c7b06567150fdf16925
+- Message: test: remove deliberate CI failure probe and keep evidence link
+- Result: conclusion=success
+
+Related failure evidence (pipeline correctly goes red):
+evidence/ci-failed-run.txt
+https://github.com/akzz98/HustleHub/actions/runs/42634298478
