@@ -50,7 +50,13 @@ describe('HomePage', () => {
   });
 
   test('freelancer home shows income, bookings, and create gig', async () => {
-    getMyIncome.mockResolvedValue({ totalIncome: 120, transactionCount: 2 });
+    getMyIncome.mockResolvedValue({
+      totalIncome: 120,
+      transactionCount: 2,
+      estimatedTax: 0,
+      netAfterTax: 120,
+      effectiveRate: 0,
+    });
     listMyBookings.mockResolvedValue([
       { id: 'b2', gigId: 'g2', status: 'confirmed' },
     ]);
@@ -62,6 +68,11 @@ describe('HomePage', () => {
     await waitFor(() => {
       expect(screen.getByText(/\$120/)).toBeInTheDocument();
     });
+    expect(screen.getByText(/Estimated tax \$0/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Open full dashboard' })).toHaveAttribute(
+      'href',
+      '/dashboard'
+    );
     expect(await screen.findByRole('heading', { name: 'Incoming bookings' })).toBeInTheDocument();
     expect(screen.getByText('Website fix')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Create a gig' })).toHaveAttribute('href', '/my-gigs');

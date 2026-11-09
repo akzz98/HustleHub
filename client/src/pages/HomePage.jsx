@@ -225,7 +225,8 @@ function FreelancerHome() {
             <h2 id="home-income-heading">Income</h2>
             <p className="income-total">{formatPrice(income.totalIncome)}</p>
             <p className="hint">
-              From {income.transactionCount}{' '}
+              Estimated tax {formatPrice(income.estimatedTax ?? 0)} · from{' '}
+              {income.transactionCount}{' '}
               {income.transactionCount === 1 ? 'transaction' : 'transactions'}.
             </p>
             <p className="footer-link" style={{ marginTop: '0.75rem' }}>

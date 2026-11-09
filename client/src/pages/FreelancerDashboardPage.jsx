@@ -4,18 +4,11 @@ import { getMyIncome, listGigs, listMyBookings } from '../api/http';
 import { useAuth } from '../auth/AuthContext';
 import { buildLoginPath } from '../auth/authRedirect';
 import AppNav from '../components/AppNav';
+import IncomeTaxChart, { formatPrice } from '../components/IncomeTaxChart';
 import LoadingRegion from '../components/LoadingRegion';
 import { StatusMessage } from '../components/StatusMessage';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import { formatBookingStatus } from '../utils/bookingStatus';
-
-function formatPrice(price) {
-  return new Intl.NumberFormat(undefined, {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 2,
-  }).format(price);
-}
 
 function FreelancerDashboardPage() {
   useDocumentTitle('Dashboard');
@@ -107,7 +100,7 @@ function FreelancerDashboardPage() {
         </p>
 
         <section className="dashboard-income" aria-labelledby="income-heading">
-          <h2 id="income-heading">Income</h2>
+          <h2 id="income-heading">Income and tax</h2>
           <LoadingRegion loading={incomeLoading} label="Loading income…">
             <StatusMessage type="error">{incomeError}</StatusMessage>
             {incomeError ? (
@@ -119,7 +112,7 @@ function FreelancerDashboardPage() {
             ) : null}
             {!incomeError && income ? (
               <>
-                <p className="income-total">{formatPrice(income.totalIncome)}</p>
+                <IncomeTaxChart income={income} />
                 <p className="hint">
                   From {income.transactionCount}{' '}
                   {income.transactionCount === 1 ? 'transaction' : 'transactions'}.

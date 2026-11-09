@@ -1,6 +1,16 @@
 const request = require('supertest');
 const app = require('../src/app');
 const incomeService = require('../src/services/incomeService');
+const { estimateTax } = require('../src/utils/taxEstimate');
+
+function incomePayload(freelancerId, totalIncome, transactionCount) {
+  return {
+    freelancerId,
+    totalIncome,
+    transactionCount,
+    ...estimateTax(totalIncome),
+  };
+}
 
 const freelancerUser = {
   name: 'Free Lancer',
@@ -38,11 +48,7 @@ describe('incomeService.getFreelancerIncome', () => {
 
     const income = await incomeService.getFreelancerIncome(freelancer.user.id);
 
-    expect(income).toEqual({
-      freelancerId: freelancer.user.id,
-      totalIncome: 0,
-      transactionCount: 0,
-    });
+    expect(income).toEqual(incomePayload(freelancer.user.id, 0, 0));
   });
 
   test('sums transaction amounts for the freelancer only', async () => {
@@ -83,27 +89,15 @@ describe('incomeService.getFreelancerIncome', () => {
     const income = await incomeService.getFreelancerIncome(freelancer.user.id);
     const otherIncome = await incomeService.getFreelancerIncome(other.user.id);
 
-    expect(income).toEqual({
-      freelancerId: freelancer.user.id,
-      totalIncome: 150,
-      transactionCount: 2,
-    });
+    expect(income).toEqual(incomePayload(freelancer.user.id, 150, 2));
 
-    expect(otherIncome).toEqual({
-      freelancerId: other.user.id,
-      totalIncome: 999,
-      transactionCount: 1,
-    });
+    expect(otherIncome).toEqual(incomePayload(other.user.id, 999, 1));
   });
 
   test('invalid freelancer id returns zero income', async () => {
     const income = await incomeService.getFreelancerIncome('not-a-valid-id');
 
-    expect(income).toEqual({
-      freelancerId: 'not-a-valid-id',
-      totalIncome: 0,
-      transactionCount: 0,
-    });
+    expect(income).toEqual(incomePayload('not-a-valid-id', 0, 0));
   });
 });
 
@@ -127,11 +121,7 @@ describe('GET /api/income/me', () => {
       .set('Authorization', `Bearer ${freelancer.token}`);
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({
-      freelancerId: freelancer.user.id,
-      totalIncome: 120,
-      transactionCount: 1,
-    });
+    expect(response.body).toEqual(incomePayload(freelancer.user.id, 120, 1));
   });
 
   test('ignores client-supplied freelancerId query or body', async () => {
@@ -155,11 +145,7 @@ describe('GET /api/income/me', () => {
       .send({ freelancerId: other.user.id });
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({
-      freelancerId: freelancer.user.id,
-      totalIncome: 0,
-      transactionCount: 0,
-    });
+    expect(response.body).toEqual(incomePayload(freelancer.user.id, 0, 0));
   });
 
   test('client role is forbidden', async () => {
@@ -220,11 +206,7 @@ describe('income access control and calculation regression', () => {
       .set('Authorization', `Bearer ${freelancer.token}`);
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({
-      freelancerId: freelancer.user.id,
-      totalIncome: 100,
-      transactionCount: 2,
-    });
+    expect(response.body).toEqual(incomePayload(freelancer.user.id, 100, 2));
   });
 
   test('freelancer income endpoint never returns another freelancer total', async () => {
@@ -251,13 +233,9 @@ describe('income access control and calculation regression', () => {
       .set('Authorization', `Bearer ${other.token}`);
 
     expect(mine.status).toBe(200);
-    expect(mine.body.totalIncome).toBe(0);
+    expect(mine.body).toEqual(incomePayload(freelancer.user.id, 0, 0));
     expect(theirs.status).toBe(200);
-    expect(theirs.body).toEqual({
-      freelancerId: other.user.id,
-      totalIncome: 400,
-      transactionCount: 1,
-    });
+    expect(theirs.body).toEqual(incomePayload(other.user.id, 400, 1));
   });
 
   test('admin cannot access freelancer income endpoint', async () => {
@@ -301,5 +279,30 @@ describe('income access control and calculation regression', () => {
     expect(income.status).toBe(200);
     expect(income.body.totalIncome).toBe(booking.body.transaction.amount);
     expect(income.body.transactionCount).toBe(1);
+    expect(income.body.estimatedTax).toBe(0);
+  });
+
+  test('includes tax estimate fields for income in the taxable band', async () => {
+    const freelancer = await registerAndLogin(freelancerUser);
+    const client = await registerAndLogin(clientUser);
+
+    const gig = await request(app)
+      .post('/api/gigs')
+      .set('Authorization', `Bearer ${freelancer.token}`)
+      .send({ title: 'Large', description: 'Taxable band', price: 20000 });
+
+    await request(app)
+      .post('/api/bookings')
+      .set('Authorization', `Bearer ${client.token}`)
+      .send({ gigId: gig.body.id });
+
+    const income = await request(app)
+      .get('/api/income/me')
+      .set('Authorization', `Bearer ${freelancer.token}`);
+
+    expect(income.status).toBe(200);
+    expect(income.body).toEqual(incomePayload(freelancer.user.id, 20000, 1));
+    expect(income.body.estimatedTax).toBe(1800);
+    expect(income.body.netAfterTax).toBe(18200);
   });
 });

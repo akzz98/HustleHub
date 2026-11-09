@@ -110,6 +110,9 @@ describe('Part 2 endpoint regression', () => {
       .set('Authorization', `Bearer ${freelancerToken}`);
     expect(income.status).toBe(200);
     expect(income.body.totalIncome).toBe(160);
+    expect(income.body.estimatedTax).toBe(0);
+    expect(income.body.netAfterTax).toBe(160);
+    expect(income.body.effectiveRate).toBe(0);
 
     const admin = await userService.createAdminUser(
       'Reg Admin',

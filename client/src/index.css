@@ -644,6 +644,108 @@ h1 {
   color: var(--accent-dark);
 }
 
+.income-tax-summary {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.income-tax-stats {
+  margin: 0;
+  display: grid;
+  gap: 0.75rem 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+}
+
+.income-tax-stats > div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.income-tax-stats dt {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.income-tax-stats dd {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.income-tax-stats dd.income-total {
+  font-size: 1.75rem;
+}
+
+.income-tax-note {
+  margin: 0;
+}
+
+.income-tax-chart {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.15rem;
+}
+
+.income-tax-bar-row {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr 5.5rem;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.income-tax-bar-label,
+.income-tax-bar-value {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.income-tax-bar-value {
+  text-align: right;
+  color: var(--text);
+}
+
+.income-tax-bar-track {
+  height: 0.7rem;
+  border-radius: 999px;
+  background: #e8eef5;
+  overflow: hidden;
+}
+
+.income-tax-bar-fill {
+  height: 100%;
+  min-width: 0;
+  border-radius: inherit;
+}
+
+.income-tax-bar-fill--gross {
+  background: var(--accent-dark);
+}
+
+.income-tax-bar-fill--tax {
+  background: #b45309;
+}
+
+.income-tax-bar-fill--net {
+  background: #0f766e;
+}
+
+@media (max-width: 640px) {
+  .income-tax-bar-row {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+
+  .income-tax-bar-value {
+    text-align: left;
+  }
+}
+
 .form fieldset {
   margin: 0;
   padding: 0.85rem;
