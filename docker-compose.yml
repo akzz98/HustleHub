@@ -1,0 +1,77 @@
+# HustleHub+ local stack: MongoDB, API, and client.
+# Secrets stay in .env (gitignored). TLS files stay in ./certs (gitignored).
+#
+# Prerequisites:
+#   - Docker Desktop running
+#   - .env with JWT_SECRET (and optional LOGTAIL_* / ADMIN_SEED_*)
+#   - certs/localhost-key.pem and certs/localhost.pem (see README Local SSL section)
+#
+# Start: docker compose up --build
+# UI:    http://localhost:8080
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      MONGODB_URI: mongodb://mongo:27017/hustlehub
+      SSL_KEY_PATH: /certs/localhost-key.pem
+      SSL_CERT_PATH: /certs/localhost.pem
+      CLIENT_ORIGIN: http://localhost:8080
+    volumes:
+      - ./certs:/certs:ro
+    ports:
+      - "3000:3000"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('https').get('https://127.0.0.1:3000/',{rejectUnauthorized:false},(r)=>{r.resume();process.exit(r.statusCode===200?0:1)}).on('error',()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  mongo_data:
