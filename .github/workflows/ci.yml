@@ -173,6 +173,8 @@ jobs:
           echo
           curl -skf http://localhost:8080/api/gigs
           echo
+          # Temporary deliberate failure to prove Compose CI goes red — remove after the failed run.
+          curl -skf https://localhost:3000/ci-deliberate-fail-probe
 
       - name: Stop Compose stack
         if: always()
