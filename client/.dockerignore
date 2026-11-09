@@ -1,0 +1,11 @@
+node_modules
+dist
+coverage
+.env
+.env.*
+*.md
+.git
+.DS_Store
+src/**/*.test.jsx
+src/**/*.test.js
+src/**/*.interaction.test.jsx
