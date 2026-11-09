@@ -1,0 +1,22 @@
+HustleHub+ npm audit notes
+==========================
+
+CI gates (fail on high/critical)
+--------------------------------
+- API:      npm audit --omit=dev --audit-level=high
+- Client:   npm audit --audit-level=high
+
+Applied fixes
+-------------
+- Ran `npm audit fix` (no --force) on the API and client.
+- Client: 0 vulnerabilities remaining.
+- API production dependencies: 0 high/critical remaining.
+
+Not forced (breaking / not fixable cleanly)
+-------------------------------------------
+API full `npm audit` still reports issues under newman and jest (devDependencies).
+Resolving them requires `npm audit fix --force`, which would downgrade newman or
+jest to incompatible majors. Those packages are not shipped in the production
+API image (`npm ci --omit=dev`), so the CI gate scopes audit to production deps.
+
+Captured: 2026-11-09

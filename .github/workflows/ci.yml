@@ -30,6 +30,11 @@ jobs:
       - name: Install backend dependencies
         run: npm ci
 
+      - name: Audit production dependencies
+        # Fail on high/critical in runtime deps only. Remaining issues sit in
+        # newman/jest and need breaking --force downgrades, so they stay out of this gate.
+        run: npm audit --omit=dev --audit-level=high
+
       - name: Run backend tests
         run: npm test
 
@@ -59,6 +64,9 @@ jobs:
 
       - name: Install frontend dependencies
         run: npm ci
+
+      - name: Audit frontend dependencies
+        run: npm audit --audit-level=high
 
       - name: Run oxlint
         run: npm run lint
