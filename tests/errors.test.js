@@ -1,6 +1,7 @@
 const request = require('supertest');
 const app = require('../src/app'); // Express app, not the HTTPS server
 const userService = require('../src/services/userService');
+const { logger } = require('../src/utils/logger');
 
 function assertNoLeaks(body) {
   // Client JSON must not include stacks, file paths, or secrets
@@ -39,7 +40,7 @@ describe('error responses', () => {
   });
 
   test('unexpected errors return a generic 500 and log the real error', async () => {
-    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const logSpy = jest.spyOn(logger, 'error').mockImplementation(() => {});
     const findSpy = jest
       .spyOn(userService, 'findByEmail')
       .mockRejectedValue(new Error('simulated storage failure'));
@@ -54,11 +55,27 @@ describe('error responses', () => {
 
       expect(response.status).toBe(500);
       expect(response.body).toEqual({ error: 'An internal server error occurred.' });
-      expect(spy).toHaveBeenCalled();
       assertNoLeaks(response.body);
+
+      expect(logSpy).toHaveBeenCalled();
+      const [payload] = logSpy.mock.calls[0];
+      expect(payload).toEqual(
+        expect.objectContaining({
+          event: 'server_error',
+          errName: 'Error',
+          errMessage: 'simulated storage failure',
+          method: 'POST',
+          path: '/api/auth/register',
+        })
+      );
+      expect(payload.stack).toBeUndefined();
+      expect(payload.password).toBeUndefined();
+      expect(payload.token).toBeUndefined();
+      expect(JSON.stringify(response.body)).not.toContain('simulated storage failure');
     } finally {
       findSpy.mockRestore();
-      spy.mockRestore();
+      logSpy.mockRestore();
     }
   });
 });
+
