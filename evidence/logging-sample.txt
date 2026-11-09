@@ -1,0 +1,11 @@
+HustleHub+ logging sample (JSON lines via Pino).
+Shows login, booking, transaction, and error events.
+Sensitive fields are redacted as [Redacted].
+Captured: 2026-11-09T12:49:57.081Z
+
+{"level":30,"time":1794228597080,"service":"hustlehub-api","event":"login_success","email":"freelancer@example.com","userId":"68f0a1b2c3d4e5f678901234","role":"freelancer","msg":"login succeeded"}
+{"level":40,"time":1794228597080,"service":"hustlehub-api","event":"login_failure","email":"freelancer@example.com","reason":"bad_password","password":"[Redacted]","token":"[Redacted]","msg":"login failed"}
+{"level":40,"time":1794228597080,"service":"hustlehub-api","event":"login_lockout","email":"freelancer@example.com","msg":"login lockout active"}
+{"level":30,"time":1794228597080,"service":"hustlehub-api","event":"booking_created","bookingId":"68f0b2c3d4e5f67890123456","gigId":"68f0c3d4e5f6789012345678","clientId":"68f0d4e5f678901234567890","freelancerId":"68f0a1b2c3d4e5f678901234","msg":"booking created"}
+{"level":30,"time":1794228597081,"service":"hustlehub-api","event":"transaction_created","transactionId":"68f0e5f67890123456789012","bookingId":"68f0b2c3d4e5f67890123456","clientId":"68f0d4e5f678901234567890","freelancerId":"68f0a1b2c3d4e5f678901234","amount":150,"msg":"transaction created"}
+{"level":50,"time":1794228597081,"service":"hustlehub-api","event":"server_error","errName":"Error","errMessage":"simulated storage failure","method":"POST","path":"/api/bookings","JWT_SECRET":"[Redacted]","MONGODB_URI":"[Redacted]","msg":"unexpected server error"}

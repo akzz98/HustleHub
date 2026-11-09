@@ -1,5 +1,9 @@
 const { Writable } = require('stream');
-const { createLogger } = require('../src/utils/logger');
+const {
+  createLogger,
+  shouldShipToCloud,
+  resolveLogtailToken,
+} = require('../src/utils/logger');
 
 function createCapture() {
   const lines = [];
@@ -73,4 +77,19 @@ describe('logger', () => {
     expect(raw).not.toContain('mongodb://user:pass@');
     expect(raw).not.toContain('Bearer abc.def.ghi');
   });
+
+  test('cloud shipping stays off in test and when no source token is set', () => {
+    const previous = process.env.LOGTAIL_SOURCE_TOKEN;
+    delete process.env.LOGTAIL_SOURCE_TOKEN;
+
+    expect(resolveLogtailToken()).toBe('');
+    expect(shouldShipToCloud()).toBe(false);
+
+    if (previous === undefined) {
+      delete process.env.LOGTAIL_SOURCE_TOKEN;
+    } else {
+      process.env.LOGTAIL_SOURCE_TOKEN = previous;
+    }
+  });
 });
+

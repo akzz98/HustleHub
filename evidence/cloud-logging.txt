@@ -1,0 +1,32 @@
+HustleHub+ cloud logging (Better Stack / Logtail)
+=================================================
+
+The API logger writes JSON to stdout. When LOGTAIL_SOURCE_TOKEN is set, the
+same events are also shipped to Better Stack via @logtail/pino.
+
+Where to read the logs
+----------------------
+Better Stack → Logs → Live tail (for the HustleHub Node.js source).
+
+Events that appear there (same shapes as evidence/logging-sample.txt):
+- login_success / login_failure / login_lockout
+- booking_created
+- transaction_created
+- server_error
+
+Local setup (do not commit tokens)
+----------------------------------
+1. Create a free Better Stack account.
+2. Sources → Connect source → Node.js (name it HustleHub).
+3. Copy the Source token and Ingesting host into .env:
+
+   LOGTAIL_SOURCE_TOKEN=<your-source-token>
+   LOGTAIL_INGEST_URL=https://<your-ingesting-host>
+
+4. Restart the API (`npm start`). Trigger a login or booking, then open Live tail.
+
+Status
+------
+Cloud transport is wired in src/utils/logger.js.
+Shipping activates only when LOGTAIL_SOURCE_TOKEN is present and NODE_ENV is
+not test. Add your token locally to send a live sample to Better Stack.

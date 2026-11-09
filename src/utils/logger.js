@@ -37,6 +37,45 @@ function resolveLevel(options = {}) {
   return 'info';
 }
 
+function resolveLogtailToken() {
+  return String(process.env.LOGTAIL_SOURCE_TOKEN || '').trim();
+}
+
+function resolveLogtailEndpoint() {
+  return String(process.env.LOGTAIL_INGEST_URL || '').trim();
+}
+
+function shouldShipToCloud() {
+  return Boolean(resolveLogtailToken()) && process.env.NODE_ENV !== 'test';
+}
+
+function createCloudTransport() {
+  const sourceToken = resolveLogtailToken();
+  if (!sourceToken) {
+    return null;
+  }
+
+  const logtailOptions = { sourceToken };
+  const endpoint = resolveLogtailEndpoint();
+  if (endpoint) {
+    logtailOptions.options = { endpoint };
+  }
+
+  // Same JSON events go to stdout and Better Stack.
+  return pino.transport({
+    targets: [
+      {
+        target: 'pino/file',
+        options: { destination: 1 },
+      },
+      {
+        target: '@logtail/pino',
+        options: logtailOptions,
+      },
+    ],
+  });
+}
+
 function createLogger(options = {}) {
   const pinoOptions = {
     level: resolveLevel(options),
@@ -52,6 +91,13 @@ function createLogger(options = {}) {
     return pino(pinoOptions, options.destination);
   }
 
+  if (options.enableCloud === true || (options.enableCloud !== false && shouldShipToCloud())) {
+    const transport = createCloudTransport();
+    if (transport) {
+      return pino(pinoOptions, transport);
+    }
+  }
+
   return pino(pinoOptions);
 }
 
@@ -61,4 +107,7 @@ module.exports = {
   logger,
   createLogger,
   REDACT_PATHS,
+  shouldShipToCloud,
+  resolveLogtailToken,
+  createCloudTransport,
 };
