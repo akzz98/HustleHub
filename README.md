@@ -49,7 +49,7 @@ Implementation: `src/utils/taxEstimate.js`, attached by the income service. Resp
 
 Walkthrough video (marketplace flow): https://youtu.be/Jca4H9yHYhE
 
-A final demonstration that also shows the freelancer income/tax dashboard will be linked here when recorded (submission evidence step).
+Final POE demonstration (full walkthrough — Final POE features, full app, live API): https://youtu.be/wMyG4cmv3rQ
 
 Screenshots of the guest, client, and freelancer flows are in [`evidence/hustlehub-walkthrough.pdf`](evidence/hustlehub-walkthrough.pdf).
 
