@@ -102,3 +102,19 @@ jobs:
           path: |
             evidence/semgrep-results.json
             evidence/semgrep-cli.txt
+
+  docker:
+    name: Docker images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build API image
+        run: docker build -t hustlehub-api:ci .
+
+      - name: Build client image
+        run: docker build -t hustlehub-client:ci ./client
