@@ -1,0 +1,36 @@
+HustleHub+ Docker Compose — run notes (for README)
+==================================================
+
+Prerequisites
+-------------
+- Docker Desktop running
+- .env present with at least JWT_SECRET
+- TLS files at certs/localhost-key.pem and certs/localhost.pem
+  (see README Local SSL certificate section)
+
+Start the stack
+---------------
+docker compose up --build
+
+Stop the stack
+--------------
+docker compose down
+
+URLs
+----
+- Client (UI):     http://localhost:8080
+- API (internal):  https://api:3000 on the Compose network
+                   (not published on the host by default; nginx proxies /api)
+
+How the pieces connect
+----------------------
+- Browser → http://localhost:8080 (client container / nginx)
+- Browser /api/* → nginx → https://api:3000 (TLS verify off inside the network)
+- API → mongodb://mongo:27017/hustlehub
+
+Verified
+--------
+- 2026-11-09: docker compose up --build
+- Client home returned 200 at http://localhost:8080
+- Freelancer register via http://localhost:8080/api/auth/register → 201
+- Freelancer login via http://localhost:8080/api/auth/login → 200 { token }
