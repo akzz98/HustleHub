@@ -13,11 +13,33 @@ The API runs on Node.js and Express over HTTPS (Express, 2026; Node.js, 2026). P
 - Register as **client** or **freelancer** (public registration cannot create `admin`)
 - Sign in with JWT stored in `sessionStorage` for the browser tab
 - Public gig catalog with search, sort, and excerpts
-- Freelancer: create / edit / delete own gigs; dashboard income and incoming bookings
+- Freelancer: create / edit / delete own gigs; dashboard income, tax estimate, and incoming bookings
 - Client: book a gig (demo checkout — no card charged); view My bookings
 - Admin (seeded): read-only Users, Gigs, Bookings, Transactions screens
 - Profile name in the nav after sign-in (`GET /api/profile`)
 - Loading, Retry, empty-state next steps, skip link, document titles, focus rings
+
+## Tax estimation
+
+`GET /api/income/me` returns the freelancer’s HustleHub income total and an **approximate tax estimate** on that income only. It is **not a tax return** and does not include income from outside HustleHub. Amounts stay in USD, the same unit stored on transactions. The freelancer dashboard shows gross income, estimated tax, net after tax, effective rate, and a simple bar chart of those three amounts.
+
+Progressive bands applied to `totalIncome`:
+
+| Band | Income range | Rate |
+|---|---|---|
+| 1 | `0` to `10000` | 0% |
+| 2 | above `10000` to `50000` | 18% on the amount above `10000` |
+| 3 | above `50000` | `7200` (tax at the top of band 2) plus 26% on the amount above `50000` |
+
+Worked examples:
+
+| `totalIncome` | `estimatedTax` | `netAfterTax` | `effectiveRate` |
+|---:|---:|---:|---:|
+| `160` | `0` | `160` | `0` |
+| `20000` | `1800` | `18200` | `0.09` |
+| `60000` | `9800` | `50200` | `0.16` |
+
+Implementation: `src/utils/taxEstimate.js`, attached by the income service. Response fields keep `freelancerId`, `totalIncome`, and `transactionCount`, and add `estimatedTax`, `netAfterTax`, and `effectiveRate`.
 
 ## Demo
 
