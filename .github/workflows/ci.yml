@@ -118,3 +118,62 @@ jobs:
 
       - name: Build client image
         run: docker build -t hustlehub-client:ci ./client
+
+  compose:
+    name: Docker Compose
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Create CI .env
+        run: |
+          printf '%s\n' \
+            'JWT_SECRET=ci-compose-jwt-secret-not-for-production' \
+            'JWT_EXPIRES_IN=1h' \
+            'CLIENT_ORIGIN=http://localhost:8080' > .env
+
+      - name: Generate TLS certificates
+        run: |
+          mkdir -p certs
+          openssl req -x509 -newkey rsa:2048 -sha256 -nodes \
+            -keyout certs/localhost-key.pem \
+            -out certs/localhost.pem \
+            -days 1 \
+            -subj "/CN=localhost"
+
+      - name: Start Compose stack
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml up --build -d
+
+      - name: Wait for client and API
+        run: |
+          set -e
+          for i in $(seq 1 40); do
+            if curl -sf http://localhost:8080/ >/dev/null \
+              && curl -skf https://localhost:3000/ >/dev/null; then
+              echo "stack is reachable"
+              exit 0
+            fi
+            echo "waiting ($i)..."
+            sleep 5
+          done
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml ps
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml logs
+          exit 1
+
+      - name: Live check client
+        run: |
+          curl -sf http://localhost:8080/ | head -c 200
+          echo
+          curl -sf -o /dev/null -w "client_http=%{http_code}\n" http://localhost:8080/
+
+      - name: Live check API
+        run: |
+          curl -skf https://localhost:3000/
+          echo
+          curl -skf http://localhost:8080/api/gigs
+          echo
+
+      - name: Stop Compose stack
+        if: always()
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml down -v

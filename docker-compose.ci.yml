@@ -1,0 +1,5 @@
+# CI-only overrides: publish the API so Actions can hit it directly.
+services:
+  api:
+    ports:
+      - "3000:3000"
