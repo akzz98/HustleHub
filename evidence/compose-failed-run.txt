@@ -1,0 +1,23 @@
+HustleHub+ CI — deliberate Compose failure evidence
+===================================================
+
+Purpose
+-------
+Confirm that GitHub Actions fails when the Compose live check does not pass.
+
+Broken commit
+-------------
+- Branch: POE
+- Commit: 56b41fc5a3bd5d6842c6e0a480cf32ae09ccce04
+- Message: ci: add deliberate Compose live-check failure probe
+- Change: curl -skf https://localhost:3000/ci-deliberate-fail-probe (expects 404 → curl -f fails)
+
+Failed Actions run
+------------------
+https://github.com/akzz98/HustleHub/actions/runs/42651578068
+
+Result: conclusion=failure (Docker Compose job)
+
+Restore
+-------
+The deliberate probe was removed in the following commit.
